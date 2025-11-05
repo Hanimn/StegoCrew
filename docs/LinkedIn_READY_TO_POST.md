@@ -67,7 +67,7 @@ Who's interested in AI agents? Comment below and let me know what you'd want to 
 ## 💬 FIRST COMMENT (Post this immediately after)
 
 ```
-🔗 Follow the project on GitHub: https://github.com/[YOUR-GITHUB-USERNAME]/Claude-idea
+🔗 Follow the project on GitHub: https://github.com/Hanimn/StegoCrew
 
 ⭐ Star the repo to follow along with the journey!
 📖 Complete documentation and lessons included
@@ -78,7 +78,7 @@ Let's build something amazing together! 🚀
 #GitHub #OpenSource
 ```
 
-**👆 IMPORTANT: Replace `[YOUR-GITHUB-USERNAME]` with your actual GitHub username!**
+**👆 Ready to use! No changes needed - just copy and paste!**
 
 ---
 

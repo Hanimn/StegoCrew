@@ -114,7 +114,7 @@ All technical terms explained in simple language.
 ## 📖 Documentation Structure
 
 ```
-Claude-idea/
+StegoCrew/
 ├── README.md                    ← You are here
 ├── LEARNING_GUIDE.md           ← Start here!
 ├── Claude.md                    ← Original project plan
