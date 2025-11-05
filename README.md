@@ -1,6 +1,19 @@
-# 🎯 CTF Steganography Solver - Multi-Agent Learning Project
+<div align="center">
+  <img src="assets/logo.png" alt="StegoCrew Logo" width="400"/>
 
-> **Learn CrewAI by building a real-world CTF challenge solver**
+  # StegoCrew
+
+  ### Multi-Agent CTF Steganography Solver
+
+  > **Learn CrewAI by building a real-world CTF challenge solver**
+
+  [![GitHub](https://img.shields.io/badge/GitHub-StegoCrew-blue?logo=github)](https://github.com/Hanimn/StegoCrew)
+  [![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)](https://python.org)
+  [![CrewAI](https://img.shields.io/badge/CrewAI-Powered-orange)](https://crewai.com)
+  [![License](https://img.shields.io/badge/License-Educational-green)](LICENSE)
+</div>
+
+---
 
 A comprehensive, beginner-friendly tutorial project that teaches you how to build multi-agent AI systems using CrewAI by creating an automated steganography challenge solver for CTF competitions.
 
