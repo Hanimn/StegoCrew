@@ -82,6 +82,36 @@ python create_test_challenges.py
 cd ../examples
 ```
 
+### Lesson 7: Building the Complete MVP
+
+**06_complete_stegocrew.py** - Full 5-agent StegoCrew system
+- ✅ Complete production-ready CTF solver
+- ✅ 5 specialized agents working together
+- ✅ Reconnaissance → Stego → Pattern → Decoder → Orchestrator
+- ✅ Full context flow and comprehensive reporting
+- ✅ Real flag detection and solution path tracking
+
+**Run it:**
+```bash
+# Analyze a CTF challenge
+python 06_complete_stegocrew.py ../test_files/challenge_metadata.jpg
+
+# Analyze sample file
+python 06_complete_stegocrew.py ../test_files/sample_with_metadata.txt
+
+# Create test challenges first
+cd ../test_files
+python create_test_challenges.py
+cd ../examples
+```
+
+**What makes this complete:**
+- 🔍 Reconnaissance Agent - File analysis, metadata, entropy
+- 🛠️ Steganography Expert - Steghide, binwalk extraction
+- 🧩 Pattern Hunter - String extraction, encoding detection
+- 🔐 Decoder Specialist - Base64, hex, ROT13 decoding
+- 📊 Orchestrator - Comprehensive final report
+
 ---
 
 ## 🎓 Practice Files
