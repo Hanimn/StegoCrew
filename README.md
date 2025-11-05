@@ -64,7 +64,7 @@ All technical terms explained in simple language.
 |--------|-------|----------|--------|
 | **[Lesson 1](./docs/lessons/LESSON_01.md)** | Understanding Multi-Agent Systems | 1-2 hours | ✅ Ready |
 | **[Lesson 2](./docs/lessons/LESSON_02.md)** | Environment Setup | 1-2 hours | ✅ Ready |
-| **Lesson 3** | Your First Agent (Hello World) | 2-3 hours | 🚧 Coming |
+| **[Lesson 3](./docs/lessons/LESSON_03.md)** | Your First Agent (Hello World) | 2-3 hours | ✅ Ready |
 | **Lesson 4** | Custom Tools Deep Dive | 2-3 hours | 🚧 Coming |
 | **Lesson 5** | Multi-Agent Coordination | 3-4 hours | 🚧 Coming |
 | **Lesson 6** | Steganography Tool Integration | 3-4 hours | 🚧 Coming |
