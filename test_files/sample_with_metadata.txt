@@ -1,0 +1,16 @@
+Welcome to StegoCrew Practice!
+
+This is a sample file with some interesting strings:
+- username: admin
+- password: P@ssw0rd123
+- secret_key: aGVsbG93b3JsZA==
+- flag: CTF{this_was_easy}
+
+Some base64-encoded data:
+VGhpcyBpcyBhIHNlY3JldCBtZXNzYWdlIQ==
+
+Good luck finding all the secrets!
+
+Hint: Try using 'strings' command to find interesting patterns.
+Hint: Try decoding the base64 strings.
+Hint: The flag is right there in plain sight!

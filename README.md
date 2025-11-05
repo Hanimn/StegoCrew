@@ -80,7 +80,7 @@ All technical terms explained in simple language.
 | **[Lesson 3](./docs/lessons/LESSON_03.md)** | Your First Agent (Hello World) | 2-3 hours | ✅ Ready |
 | **[Lesson 4](./docs/lessons/LESSON_04.md)** | Custom Tools Deep Dive | 2-3 hours | ✅ Ready |
 | **[Lesson 5](./docs/lessons/LESSON_05.md)** | Multi-Agent Coordination | 3-4 hours | ✅ Ready |
-| **Lesson 6** | Steganography Tool Integration | 3-4 hours | 🚧 Coming |
+| **[Lesson 6](./docs/lessons/LESSON_06.md)** | Real Steganography Tools | 3-4 hours | ✅ Ready |
 | **Lesson 7** | Building the MVP | 4-6 hours | 🚧 Coming |
 | **Lesson 8** | Testing & Debugging | 2-3 hours | 🚧 Coming |
 

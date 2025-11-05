@@ -60,6 +60,49 @@ python 04_multi_agent_crew.py
 python 04_multi_agent_crew.py path/to/file.txt
 ```
 
+### Lesson 6: Real Steganography Tools
+
+**05_stego_tools.py** - Production-ready steganography tool wrappers
+- ✅ Wrap real stego utilities (steghide, binwalk, exiftool, strings)
+- ✅ Professional error handling and tool detection
+- ✅ Output parsing and flag detection
+- ✅ Complete CTF challenge workflow
+
+**Run it:**
+```bash
+# Analyze default file
+python 05_stego_tools.py
+
+# Analyze CTF challenge
+python 05_stego_tools.py ../test_files/challenge_steghide.jpg
+
+# Create test challenges first
+cd ../test_files
+python create_test_challenges.py
+cd ../examples
+```
+
+---
+
+## 🎓 Practice Files
+
+### my_first_tool.py (Lesson 4 Practice)
+- Build a custom tool from scratch
+- Two modes: test mode and agent mode
+- Run: `python my_first_tool.py` or `python my_first_tool.py --agent`
+
+### my_first_crew.py (Lesson 5 Practice)
+- Simple 2-agent system for learning
+- Document analyzer + summarizer
+- Easy to extend with 3rd agent
+- Run: `python my_first_crew.py ../README.md`
+
+### my_stego_analyzer.py (Lesson 6 Practice)
+- Build your own stego analyzer
+- Complete the TODOs to create working tools
+- Test with real CTF challenges
+- Run: `python my_stego_analyzer.py ../test_files/challenge_metadata.jpg`
+
 ---
 
 ## 🚀 How to Use These Examples
