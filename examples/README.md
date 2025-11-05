@@ -30,6 +30,36 @@ python 01_first_agent.py
 python 02_agent_with_two_tools.py
 ```
 
+### Lesson 4: Custom Tools Deep Dive
+
+**03_advanced_tools.py** - Advanced multi-parameter tools
+- ✅ Tools with multiple parameters
+- ✅ Error handling patterns
+- ✅ System command wrapping
+- ✅ Structured data returns (JSON)
+
+**Run it:**
+```bash
+python 03_advanced_tools.py
+```
+
+### Lesson 5: Multi-Agent Coordination
+
+**04_multi_agent_crew.py** - Complete multi-agent system
+- ✅ 4 specialized agents working together
+- ✅ Sequential workflow with context sharing
+- ✅ Task dependencies and handoffs
+- ✅ Real CTF-style file analysis
+
+**Run it:**
+```bash
+# Analyze default file (README.md)
+python 04_multi_agent_crew.py
+
+# Analyze specific file
+python 04_multi_agent_crew.py path/to/file.txt
+```
+
 ---
 
 ## 🚀 How to Use These Examples
