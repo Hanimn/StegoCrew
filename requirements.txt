@@ -1,0 +1,29 @@
+# Core dependencies for StegoCrew
+# Multi-agent CTF steganography solver
+
+# CrewAI framework
+crewai>=0.28.0
+crewai-tools>=0.1.0
+
+# LLM integration
+langchain-anthropic>=0.1.0
+langchain>=0.1.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Optional: For image processing and analysis
+# Uncomment if you want to extend with image manipulation
+# Pillow>=10.0.0
+# numpy>=1.24.0
+
+# Optional: For audio steganography
+# Uncomment if you want to add audio analysis
+# librosa>=0.10.0
+# soundfile>=0.12.0
+# matplotlib>=3.7.0
+
+# Development dependencies (optional)
+# pytest>=7.4.0
+# black>=23.0.0
+# flake8>=6.0.0
