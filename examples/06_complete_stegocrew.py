@@ -406,9 +406,8 @@ recon_agent = Agent(
 
     goal="Perform thorough initial file analysis to identify characteristics and anomalies",
 
-    backstory="""You are a digital forensics expert with years of experience analyzing
-    suspicious files. You always start by examining file properties, metadata, and structure.
-    Your findings guide the rest of the team.""",
+    backstory="""You're the team's file detective. Check file signatures, metadata, entropy -
+    the basics that everyone else skips. Weird metadata usually means hidden data.""",
 
     tools=[
         get_file_type,
@@ -428,9 +427,8 @@ stego_agent = Agent(
 
     goal="Extract hidden data using specialized steganography tools and techniques",
 
-    backstory="""You are a CTF veteran who has solved hundreds of steganography challenges.
-    You know every technique: LSB, file embedding, steghide, and more. You systematically
-    apply your tools to uncover hidden data.""",
+    backstory="""You've been running stego tools since 2015. steghide, binwalk, zsteg - you know their
+    quirks and failure modes. Start with the obvious, then try the weird stuff.""",
 
     tools=[
         extract_with_steghide,
@@ -449,9 +447,8 @@ pattern_agent = Agent(
 
     goal="Identify encoded data, suspicious patterns, and potential flags in all findings",
 
-    backstory="""You have a keen eye for patterns. You can spot base64, hex encoding,
-    binary data, and other encodings instantly. You analyze all data found so far and
-    identify anything that looks encoded or suspicious.""",
+    backstory="""Pattern recognition is your thing. base64 ends with '=', hex is all 0-9A-F, binary patterns
+    stand out. You've seen enough encoded data to spot it immediately.""",
 
     tools=[
         extract_strings,
@@ -470,9 +467,8 @@ decoder_agent = Agent(
 
     goal="Decode encoded messages and decrypt data to reveal flags",
 
-    backstory="""You are a cryptography expert who can decode any encoding. Base64, hex,
-    ROT13, XOR - you've cracked them all. You work methodically through encodings until
-    you find the flag.""",
+    backstory="""Decoding is straightforward: try base64, then hex, then ROT13. If none work, it's probably
+    XOR or a multi-layer encoding. Work through them methodically.""",
 
     tools=[
         decode_base64,
@@ -492,9 +488,8 @@ orchestrator_agent = Agent(
 
     goal="Synthesize all findings into comprehensive report and identify all flags",
 
-    backstory="""You are an experienced CTF team leader who excels at coordinating
-    complex investigations. You review all findings from the team, identify the most
-    important discoveries, and create clear, actionable reports highlighting all flags found.""",
+    backstory="""You compile what the team found into something readable. Highlight the flag if found,
+    show the solution path, note what didn't work. Keep it concise.""",
 
     tools=[],  # No tools - synthesizes information
 
