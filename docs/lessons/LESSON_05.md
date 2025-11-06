@@ -1,764 +1,335 @@
 # Lesson 5: Multi-Agent Coordination
 
 **Duration:** 3-4 hours
-**Prerequisites:** Lessons 3 & 4 completed
-**Goal:** Build teams of agents that work together to solve complex problems
+**Prerequisites:** Lessons 3-4 completed
 
 ---
 
-## 🎯 What You'll Learn
+## Why Multiple Agents?
 
-By the end of this lesson, you'll have:
-1. ✅ Created multiple specialized agents
-2. ✅ Coordinated agents to work sequentially
-3. ✅ Shared context between agents
-4. ✅ Built task dependencies and handoffs
-5. ✅ Understood crew processes (sequential, hierarchical)
-6. ✅ Created your first multi-agent CTF solver prototype
-
----
-
-## 📚 Lesson Overview
-
-```
-Part 1: Why Multiple Agents?
-Part 2: Agent Specialization
-Part 3: Sequential Workflows
-Part 4: Context Sharing & Memory
-Part 5: Task Dependencies
-Part 6: Building Our CTF Crew
-Part 7: Debugging Multi-Agent Systems
-```
-
----
-
-## Part 1: Why Multiple Agents?
-
-### The Problem: One Agent Doing Everything
-
-Imagine one agent trying to solve a CTF challenge:
-
+**One agent doing everything:**
 ```python
-# ❌ BAD: One agent with ALL responsibilities
 super_agent = Agent(
-    role="CTF Solver",
-    goal="Analyze files, extract data, decode messages, find flags",
-    tools=[
-        exiftool, binwalk, steghide, strings,
-        base64_decode, rot13, caesar_cipher,
-        entropy_calc, file_check, ...  # 20+ tools!
-    ]
+    role="Do all the things",
+    tools=[tool1, tool2, ..., tool20]  # Too many!
 )
 ```
 
-**Problems:**
-- ❌ Overwhelming choice of tools (agent gets confused)
-- ❌ Unfocused decision-making
-- ❌ Tries to do everything at once
-- ❌ Poor at specialization
-- ❌ Hard to debug
+Problems:
+- Overwhelmed by tool choices
+- Unfocused decisions
+- Hard to debug
 
-### The Solution: Specialized Agent Team
-
+**Specialized team:**
 ```python
-# ✅ GOOD: Multiple specialized agents
-recon_agent = Agent(
-    role="File Analyst",
-    goal="Analyze file structure and metadata",
-    tools=[exiftool, file_check, entropy_calc]  # Only 3 focused tools
-)
-
-stego_agent = Agent(
-    role="Steganography Expert",
-    goal="Extract hidden data",
-    tools=[binwalk, steghide, strings]  # Only stego tools
-)
-
-decoder_agent = Agent(
-    role="Decoder Specialist",
-    goal="Decode encoded messages",
-    tools=[base64_decode, rot13, caesar]  # Only decoding tools
-)
+agent1 = Agent(role="File Analysis", tools=[metadata_tool])
+agent2 = Agent(role="Stego Expert", tools=[steghide, binwalk])
+agent3 = Agent(role="Decoder", tools=[base64, hex])
 ```
 
-**Benefits:**
-- ✅ Each agent is focused and expert
-- ✅ Clear responsibilities
-- ✅ Easier tool selection
-- ✅ Better decision quality
-- ✅ Easy to debug
+Benefits:
+- Clear responsibilities
+- Focused tool use
+- Easy to debug
+- Sequential workflow
 
 ---
 
-## Part 2: Agent Specialization
+## Context Sharing
 
-Let's create our first specialized agent team!
-
-### Agent 1: The Reconnaissance Agent
+Agents share findings through task context:
 
 ```python
-from crewai import Agent
-from crewai_tools import tool
-from langchain_anthropic import ChatAnthropic
-import os
+task1 = Task(
+    description="Analyze file and report suspicious indicators",
+    agent=agent1
+)
 
-# Initialize LLM
-llm = ChatAnthropic(model="claude-3-5-sonnet-20241022", temperature=0)
-
-# Tools for reconnaissance
-@tool
-def check_file_type(file_path: str) -> str:
-    """Identify file type using magic bytes and extension."""
-    import subprocess
-    result = subprocess.run(['file', file_path], capture_output=True, text=True)
-    return result.stdout
-
-@tool
-def get_file_size(file_path: str) -> str:
-    """Get file size in human-readable format."""
-    size = os.path.getsize(file_path)
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if size < 1024:
-            return f"{size:.2f} {unit}"
-        size /= 1024
-
-@tool
-def calculate_file_entropy(file_path: str) -> str:
-    """Calculate Shannon entropy (randomness) of file."""
-    import math
-    from collections import Counter
-
-    with open(file_path, 'rb') as f:
-        data = f.read()
-
-    byte_counts = Counter(data)
-    entropy = 0
-    for count in byte_counts.values():
-        p = count / len(data)
-        entropy -= p * math.log2(p)
-
-    if entropy > 7.5:
-        assessment = "VERY HIGH - likely encrypted or compressed"
-    elif entropy > 6:
-        assessment = "HIGH - possible hidden data"
-    elif entropy > 4:
-        assessment = "MEDIUM - normal file"
-    else:
-        assessment = "LOW - simple data"
-
-    return f"Entropy: {entropy:.4f}/8.0 - {assessment}"
-
-# Create the Reconnaissance Agent
-recon_agent = Agent(
-    role="File Reconnaissance Specialist",
-
-    goal="Perform thorough initial analysis of files to identify characteristics and anomalies",
-
-    backstory="""You are a meticulous digital forensics expert with 10 years
-    of experience. You always start investigations by thoroughly examining
-    file properties, structure, and metadata. You have a keen eye for spotting
-    anomalies that others miss.""",
-
-    tools=[check_file_type, get_file_size, calculate_file_entropy],
-
-    llm=llm,
-    verbose=True
+task2 = Task(
+    description="Based on previous analysis, extract hidden data",
+    agent=agent2,
+    context=[task1]  # Gets task1's output!
 )
 ```
 
-### Agent 2: The Steganography Expert
-
-```python
-@tool
-def run_binwalk_analysis(file_path: str) -> str:
-    """Analyze file for embedded files and data."""
-    import subprocess
-    result = subprocess.run(
-        ['binwalk', file_path],
-        capture_output=True,
-        text=True,
-        timeout=30
-    )
-    return result.stdout if result.returncode == 0 else "Binwalk found nothing"
-
-@tool
-def extract_strings_from_file(file_path: str) -> str:
-    """Extract printable strings from file."""
-    import subprocess
-    result = subprocess.run(
-        ['strings', file_path],
-        capture_output=True,
-        text=True
-    )
-    strings = result.stdout.split('\n')
-    # Look for interesting strings
-    interesting = [s for s in strings if 'flag' in s.lower() or 'CTF{' in s or len(s) > 30]
-    return "\n".join(interesting[:20]) if interesting else "No interesting strings found"
-
-stego_expert = Agent(
-    role="Steganography Extraction Expert",
-
-    goal="Extract and identify hidden data using specialized steganography tools",
-
-    backstory="""You are a CTF veteran who has solved hundreds of steganography
-    challenges. You know every trick in the book for hiding data in files. You
-    systematically use your tools to uncover hidden information.""",
-
-    tools=[run_binwalk_analysis, extract_strings_from_file],
-
-    llm=llm,
-    verbose=True
-)
+When agent2 runs, it sees:
 ```
+Previous task output:
+"File entropy: 7.9/8.0 (HIGH)
+Metadata shows creation tool: Adobe but no Adobe markers
+Recommendation: Check for steganography"
 
-### Agent 3: The Pattern Decoder
-
-```python
-@tool
-def detect_encoding(text: str) -> str:
-    """Detect if text is Base64, hex, or other encoding."""
-    import re
-
-    # Check Base64
-    if re.match(r'^[A-Za-z0-9+/]*={0,2}$', text) and len(text) % 4 == 0:
-        return "Likely BASE64 encoded"
-
-    # Check Hex
-    if re.match(r'^[0-9A-Fa-f]+$', text):
-        return "Likely HEX encoded"
-
-    # Check Binary
-    if re.match(r'^[01]+$', text):
-        return "Likely BINARY encoded"
-
-    return "Plain text or unknown encoding"
-
-@tool
-def decode_base64(encoded_text: str) -> str:
-    """Decode Base64 encoded text."""
-    import base64
-    try:
-        decoded = base64.b64decode(encoded_text).decode('utf-8')
-        return f"Decoded: {decoded}"
-    except:
-        return "Failed to decode as Base64"
-
-decoder_agent = Agent(
-    role="Pattern Recognition and Decoding Specialist",
-
-    goal="Identify encoding patterns and decode encrypted or encoded messages",
-
-    backstory="""You are a cryptography expert who can spot encoded data
-    instantly. You recognize patterns like Base64, hexadecimal, ROT13, and
-    more. You systematically decode messages layer by layer.""",
-
-    tools=[detect_encoding, decode_base64],
-
-    llm=llm,
-    verbose=True
-)
+Your task: Based on previous analysis, extract hidden data
 ```
 
 ---
 
-## Part 3: Sequential Workflows
+## Sequential Workflow
 
-Now let's make these agents work together!
-
-### Basic Sequential Workflow
+Tasks run in order, each building on previous results:
 
 ```python
-from crewai import Task, Crew, Process
+from crewai import Crew, Process
 
-# Task 1: Reconnaissance
-recon_task = Task(
-    description="""
-    Perform initial analysis of the file: {file_path}
-
-    Your analysis should include:
-    1. File type identification
-    2. File size
-    3. Entropy calculation
-
-    Provide a comprehensive report of your findings.
-    """,
-
-    expected_output="A detailed reconnaissance report",
-
-    agent=recon_agent
+crew = Crew(
+    agents=[recon_agent, stego_agent, decoder_agent],
+    tasks=[recon_task, stego_task, decoder_task],
+    process=Process.sequential  # One at a time, in order
 )
 
-# Task 2: Steganography Analysis
-stego_task = Task(
-    description="""
-    Based on the reconnaissance findings, analyze the file for hidden data.
-
-    Use your steganography tools to:
-    1. Run binwalk to find embedded files
-    2. Extract strings looking for flags or clues
-
-    Report what you find.
-    """,
-
-    expected_output="Steganography analysis results",
-
-    agent=stego_expert,
-
-    context=[recon_task]  # ← This is key! Stego agent sees recon results
-)
-
-# Task 3: Decode Findings
-decode_task = Task(
-    description="""
-    Analyze the data found by the steganography expert.
-
-    If any encoded strings were found:
-    1. Identify the encoding type
-    2. Decode the data
-    3. Look for CTF flags in the format CTF{...}
-
-    Report your findings.
-    """,
-
-    expected_output="Decoded messages and potential flags",
-
-    agent=decoder_agent,
-
-    context=[stego_task]  # Decoder sees stego results
-)
-
-# Create the crew
-ctf_crew = Crew(
-    agents=[recon_agent, stego_expert, decoder_agent],
-
-    tasks=[recon_task, stego_task, decode_task],
-
-    process=Process.sequential,  # One agent at a time, in order
-
-    verbose=True
-)
-
-# Run it!
-result = ctf_crew.kickoff(inputs={"file_path": "challenge.png"})
-
-print("\n" + "="*60)
-print("FINAL RESULT:")
-print("="*60)
-print(result)
+result = crew.kickoff(inputs={"file_path": "challenge.png"})
 ```
 
-**What happens:**
-1. Recon agent analyzes file → produces report
-2. Stego expert reads recon report → extracts hidden data
-3. Decoder reads stego findings → decodes messages
-4. Final result combines all insights
-
----
-
-## Part 4: Context Sharing & Memory
-
-### How Agents Share Information
-
-```python
-# Task A produces output
-task_a = Task(
-    description="Find the file size",
-    agent=agent_a,
-    expected_output="File size in bytes"
-)
-
-# Task B can reference Task A's output
-task_b = Task(
-    description="""
-    Based on the file size found in the previous analysis,
-    determine if the file is suspiciously large or small.
-    """,
-
-    agent=agent_b,
-
-    context=[task_a]  # ← Agent B sees Agent A's output!
-)
+Flow:
 ```
-
-**Under the hood:**
-- CrewAI passes task_a's output to task_b
-- Agent B's LLM sees both the description AND task_a's result
-- Agent B can reference findings from Agent A
-
-### Example: Context in Action
-
-```python
-# Agent 1 finds something
-task_find = Task(
-    description="Look for encoded strings in the file",
-    agent=finder_agent,
-    expected_output="List of suspicious strings"
-)
-
-# Agent 2 uses Agent 1's findings
-task_decode = Task(
-    description="""
-    The previous agent found some suspicious strings.
-
-    Examine each string they found and:
-    1. Identify the encoding type
-    2. Decode it
-    3. Check if it's a flag
-
-    Focus on the strings that look most promising.
-    """,
-
-    agent=decoder_agent,
-
-    context=[task_find]  # Decoder sees finder's results
-)
+recon_agent → finds high entropy
+              ↓
+stego_agent → extracts base64 string
+              ↓
+decoder_agent → decodes to flag
 ```
 
 ---
 
-## Part 5: Task Dependencies
+## Complete Example
 
-### Simple Chain
-
-```
-Task 1 (Recon) → Task 2 (Stego) → Task 3 (Decode)
-```
-
-```python
-recon = Task(..., agent=recon_agent)
-stego = Task(..., agent=stego_agent, context=[recon])
-decode = Task(..., agent=decode_agent, context=[stego])
-```
-
-### Multiple Dependencies
-
-```
-       Task 1 (Recon)
-       ↓             ↓
-Task 2 (Stego)   Task 3 (Strings)
-       ↓             ↓
-       Task 4 (Decode) ← Uses both
-```
-
-```python
-recon = Task(..., agent=recon_agent)
-
-stego = Task(..., agent=stego_agent, context=[recon])
-strings = Task(..., agent=string_agent, context=[recon])
-
-# Decode sees BOTH stego and strings results
-decode = Task(..., agent=decode_agent, context=[stego, strings])
-```
-
----
-
-## Part 6: Building Our CTF Crew
-
-Let's put it all together into a real CTF solver!
-
-### Complete Example
+Create `examples/04_multi_agent_crew.py`:
 
 ```python
 #!/usr/bin/env python3
-"""
-Multi-Agent CTF Steganography Solver
-"""
-
+import os
+from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, Process
 from crewai_tools import tool
 from langchain_anthropic import ChatAnthropic
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
-llm = ChatAnthropic(model="claude-3-5-sonnet-20241022", temperature=0)
 
-# ==================== TOOLS ====================
-
+# Tools
 @tool
-def analyze_file_properties(file_path: str) -> str:
-    """Get basic file properties."""
-    import subprocess
+def get_file_info(file_path: str) -> str:
+    """Get basic file information."""
+    if not os.path.exists(file_path):
+        return f"File not found: {file_path}"
     size = os.path.getsize(file_path)
-    file_type = subprocess.run(['file', file_path], capture_output=True, text=True)
-    return f"Size: {size} bytes\nType: {file_type.stdout}"
-
-@tool
-def run_binwalk(file_path: str) -> str:
-    """Check for embedded files."""
-    import subprocess
-    result = subprocess.run(['binwalk', file_path], capture_output=True, text=True)
-    return result.stdout if "DECIMAL" in result.stdout else "No embedded files found"
+    return f"File: {file_path}\nSize: {size} bytes"
 
 @tool
 def extract_strings(file_path: str) -> str:
-    """Extract readable strings."""
-    import subprocess
-    result = subprocess.run(['strings', file_path], capture_output=True, text=True)
-    lines = result.stdout.split('\n')
-    interesting = [l for l in lines if 'flag' in l.lower() or 'CTF{' in l or len(l) > 30]
-    return "\n".join(interesting[:10]) if interesting else "No interesting strings"
-
-@tool
-def decode_base64_string(encoded: str) -> str:
-    """Decode Base64."""
-    import base64
+    """Extract readable strings from file."""
     try:
-        return base64.b64decode(encoded).decode('utf-8')
-    except:
-        return "Not valid Base64"
+        with open(file_path, 'rb') as f:
+            data = f.read()
+        # Simple string extraction
+        strings = []
+        current = []
+        for byte in data:
+            if 32 <= byte <= 126:  # Printable ASCII
+                current.append(chr(byte))
+            elif current:
+                if len(current) >= 4:
+                    strings.append(''.join(current))
+                current = []
+        return "\n".join(strings[:20])  # First 20 strings
+    except Exception as e:
+        return f"Error: {str(e)}"
 
-# ==================== AGENTS ====================
+# LLM
+llm = ChatAnthropic(model="claude-3-5-sonnet-20241022", temperature=0)
 
-recon_agent = Agent(
-    role="Reconnaissance Specialist",
-    goal="Analyze file properties and identify anomalies",
-    backstory="Expert in digital forensics with keen eye for details",
-    tools=[analyze_file_properties],
+# Agents
+analyst = Agent(
+    role="File Analyst",
+    goal="Analyze file and identify characteristics",
+    backstory="You examine files methodically",
+    tools=[get_file_info],
     llm=llm,
     verbose=True
 )
 
-stego_agent = Agent(
-    role="Steganography Expert",
-    goal="Extract hidden data using stego techniques",
-    backstory="CTF veteran who knows all steganography tricks",
-    tools=[run_binwalk, extract_strings],
+extractor = Agent(
+    role="Data Extractor",
+    goal="Extract readable data from file",
+    backstory="You pull out hidden text and patterns",
+    tools=[extract_strings],
     llm=llm,
     verbose=True
 )
 
-decoder_agent = Agent(
-    role="Decoder Specialist",
-    goal="Decode encoded messages and find flags",
-    backstory="Cryptography expert skilled in pattern recognition",
-    tools=[decode_base64_string],
+reporter = Agent(
+    role="Report Writer",
+    goal="Summarize all findings",
+    backstory="You compile results clearly",
+    tools=[],
     llm=llm,
     verbose=True
 )
 
-# ==================== TASKS ====================
-
-recon_task = Task(
-    description="Analyze the file {file_path} and report its properties",
-    expected_output="File analysis report",
-    agent=recon_agent
+# Tasks
+analyze_task = Task(
+    description="Analyze the file at {file_path} and report basic info",
+    agent=analyst,
+    expected_output="File analysis summary"
 )
 
-stego_task = Task(
-    description="""
-    Based on the reconnaissance, extract any hidden data from {file_path}.
-    Use binwalk to check for embedded files and strings to find text.
-    """,
-    expected_output="Extracted data and findings",
-    agent=stego_agent,
-    context=[recon_task]
+extract_task = Task(
+    description="Extract strings from {file_path} based on analysis",
+    agent=extractor,
+    context=[analyze_task],  # Sees analyst's output
+    expected_output="Extracted strings"
 )
 
-decode_task = Task(
-    description="""
-    Examine the data found by the steganography expert.
-    If you find encoded strings, decode them.
-    Look for flags in format: CTF{{...}} or FLAG{{...}}
-    """,
-    expected_output="Decoded messages and any flags found",
-    agent=decoder_agent,
-    context=[stego_task]
+report_task = Task(
+    description="Compile findings into final report",
+    agent=reporter,
+    context=[analyze_task, extract_task],  # Sees both outputs
+    expected_output="Summary report"
 )
 
-# ==================== CREW ====================
+# Crew
+crew = Crew(
+    agents=[analyst, extractor, reporter],
+    tasks=[analyze_task, extract_task, report_task],
+    process=Process.sequential,
+    verbose=True
+)
 
-def solve_ctf_challenge(file_path: str):
-    """Solve a CTF steganography challenge."""
-
-    crew = Crew(
-        agents=[recon_agent, stego_agent, decoder_agent],
-        tasks=[recon_task, stego_task, decode_task],
-        process=Process.sequential,
-        verbose=True
-    )
-
-    print("="*60)
-    print("🔍 STARTING CTF CHALLENGE ANALYSIS")
-    print("="*60)
-    print(f"File: {file_path}\n")
-
-    result = crew.kickoff(inputs={"file_path": file_path})
-
+if __name__ == '__main__':
+    result = crew.kickoff(inputs={"file_path": "/etc/hosts"})
     print("\n" + "="*60)
-    print("✅ ANALYSIS COMPLETE")
+    print("FINAL RESULT:")
     print("="*60)
     print(result)
-
-    return result
-
-# ==================== MAIN ====================
-
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-    else:
-        file_path = "README.md"  # Default test file
-
-    solve_ctf_challenge(file_path)
 ```
 
-**Usage:**
+Run it:
 ```bash
-python ctf_solver.py challenge.png
+python examples/04_multi_agent_crew.py
 ```
 
 ---
 
-## Part 7: Debugging Multi-Agent Systems
+## How Context Works
 
-### Common Issues
-
-**Issue 1: Agents Don't See Previous Results**
-
+**Task definitions:**
 ```python
-# ❌ WRONG - missing context
-task_2 = Task(
-    description="Decode the data",
-    agent=decoder_agent
-    # Missing: context=[task_1]
-)
-
-# ✅ CORRECT
-task_2 = Task(
-    description="Decode the data from previous analysis",
-    agent=decoder_agent,
-    context=[task_1]  # ← This is crucial!
-)
+task1 = Task(..., agent=agent1)
+task2 = Task(..., agent=agent2, context=[task1])
+task3 = Task(..., agent=agent3, context=[task1, task2])
 ```
 
-**Issue 2: Agents Repeat Work**
+**What each agent sees:**
+- agent1: Only the task description
+- agent2: task description + task1's output
+- agent3: task description + task1's output + task2's output
 
-Make task descriptions clear about what NOT to do:
+**Task inputs:**
 
+Use `{variable}` in descriptions:
 ```python
-task_2 = Task(
-    description="""
-    The previous agent already analyzed the file structure.
-    DO NOT re-analyze.
+crew.kickoff(inputs={"file_path": "test.jpg", "target": "flag"})
 
-    Your job is to decode the strings they found.
-    """,
-    agent=decoder_agent,
-    context=[task_1]
+task = Task(
+    description="Analyze {file_path} looking for {target}",
+    ...
 )
 ```
 
-**Issue 3: Too Much Context**
+---
 
-Don't overload agents with irrelevant information:
+## Common Patterns
 
-```python
-# ❌ BAD - too much context
-task_5 = Task(
-    description="Final report",
-    agent=reporter,
-    context=[task_1, task_2, task_3, task_4]  # Overwhelming!
-)
-
-# ✅ BETTER - only relevant context
-task_5 = Task(
-    description="Create final report from decoder findings",
-    agent=reporter,
-    context=[task_4]  # Just the last task
-)
+**Pattern 1: Analysis Pipeline**
+```
+Reconnaissance → Extraction → Decoding → Reporting
 ```
 
-### Debugging Tips
-
-**1. Use verbose=True**
-```python
-agent = Agent(..., verbose=True)
-crew = Crew(..., verbose=True)
+**Pattern 2: Parallel then Merge**
 ```
-
-**2. Check Task Outputs Individually**
-```python
-# Run crew step by step in debug mode
-print("Task 1 output:", recon_task.output)
-print("Task 2 output:", stego_task.output)
+Agent1 ─┐
+Agent2 ─┼─→ Coordinator → Report
+Agent3 ─┘
 ```
+(Requires Process.hierarchical)
 
-**3. Simplify First**
-Start with 2 agents, then add more:
-```python
-# Start simple
-crew = Crew(agents=[agent_1, agent_2], tasks=[task_1, task_2])
-
-# Then expand
-crew = Crew(agents=[agent_1, agent_2, agent_3], tasks=[task_1, task_2, task_3])
+**Pattern 3: Iterative Refinement**
+```
+Analyzer → Validator → (if fail) → Analyzer again
 ```
 
 ---
 
-## 🧪 Practice Exercises
+## Debugging Multi-Agent Systems
 
-### Exercise 1: Add a Reporter Agent
+**Problem: Agents don't share context properly**
 
-Create a 4th agent that takes all findings and creates a formatted report.
+Check context links:
+```python
+task2 = Task(..., context=[task1])  # Correct
+task2 = Task(..., context=task1)     # Wrong! Must be list
+```
 
-**Requirements:**
-- Agent role: "Report Generator"
-- Takes context from all previous tasks
-- Generates markdown-formatted report
-- Highlights the flag if found
+**Problem: Task order wrong**
 
-### Exercise 2: Parallel Analysis
+Agents run in the order listed in tasks array:
+```python
+tasks=[task1, task2, task3]  # Runs in this order
+```
 
-Create two agents that work on the same file in parallel:
-- Agent A: Analyzes metadata
-- Agent B: Extracts strings
+**Problem: Agent ignores previous findings**
 
-Then a third agent combines their findings.
+Make task description reference previous work:
+```python
+description="Based on the previous agent's findings, extract..."
+```
 
-**Hint:** Use `context=[task_a, task_b]` for the combiner.
+**Problem: Too much context**
 
----
-
-## 🎓 Summary
-
-You now understand:
-
-✅ **Why multiple agents** are better than one super-agent
-✅ **Agent specialization** and role definition
-✅ **Sequential workflows** with task dependencies
-✅ **Context sharing** between agents
-✅ **Building multi-agent crews** for complex tasks
-✅ **Debugging** multi-agent systems
+If previous outputs are huge, agents get overwhelmed. Summarize:
+```python
+expected_output="Brief 2-3 sentence summary"  # Not paragraphs
+```
 
 ---
 
-## 🚀 What's Next?
+## Best Practices
 
-**Next lesson: [Lesson 6 - Steganography Tool Integration](./LESSON_06.md)**
-
-We'll learn:
-- Integrating all real stego tools (steghide, binwalk, exiftool, zsteg)
-- Building a complete tool library
-- Creating specialized stego agents
-- Handling edge cases and errors
-
----
-
-## 📝 Homework
-
-Before Lesson 6:
-
-1. **Create a 4-agent crew** for analyzing text files
-2. **Experiment with context** - try different combinations
-3. **Break something intentionally** - remove context and see what happens
-4. **Time your crews** - how long do different workflows take?
+1. **3-5 agents ideal** - More than 5 gets complex
+2. **One job per agent** - Keep roles focused
+3. **Chain context carefully** - Not every task needs all previous outputs
+4. **Clear handoffs** - Explicitly state what next agent should do
+5. **Test individually** - Make sure each agent works alone first
+6. **Limit output length** - Keep context manageable
+7. **Use verbose mode** - See what agents are thinking
 
 ---
 
-**🎉 Congratulations! You can now orchestrate teams of AI agents!**
+## Key Takeaways
 
-*Previous: [Lesson 4 - Custom Tools Deep Dive](./LESSON_04.md)*
-*Next: [Lesson 6 - Steganography Tool Integration](./LESSON_06.md)*
+**Sequential process:**
+```python
+Process.sequential  # Tasks run one at a time, in order
+```
+
+**Context sharing:**
+```python
+Task(..., context=[previous_task1, previous_task2])
+```
+
+**Task inputs:**
+```python
+crew.kickoff(inputs={"var": "value"})
+# Use {var} in task descriptions
+```
+
+---
+
+## Next Steps
+
+You can now coordinate multiple agents. Next: integrating real steganography tools.
+
+[Continue to Lesson 6: Steganography Tools →](./LESSON_06.md)
+
+---
+
+*Practice: Create a 3-agent crew that analyzes a text file: one counts words, one finds longest word, one summarizes.*

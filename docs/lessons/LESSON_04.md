@@ -1,707 +1,437 @@
-# Lesson 4: Custom Tools Deep Dive
+# Lesson 4: Custom Tools
 
 **Duration:** 2-3 hours
 **Prerequisites:** Lesson 3 completed
-**Goal:** Master creating complex, production-ready tools for agents
 
 ---
 
-## 🎯 What You'll Learn
+## Building Production-Ready Tools
 
-By the end of this lesson, you'll have:
-1. ✅ Created tools with multiple parameters
-2. ✅ Implemented proper error handling
-3. ✅ Wrapped system commands (steghide, binwalk, exiftool)
-4. ✅ Returned structured data from tools
-5. ✅ Built reusable tool patterns
-6. ✅ Understood tool best practices
+Lesson 3 showed basic tools. Now we'll build tools that wrap real system commands and handle errors properly.
 
 ---
 
-## 📚 Lesson Overview
+## Multi-Parameter Tools
 
-```
-Part 1: Advanced Tool Parameters
-Part 2: Error Handling Patterns
-Part 3: Wrapping System Commands
-Part 4: Structured Data Returns
-Part 5: Real Steganography Tools
-Part 6: Tool Testing & Debugging
-Part 7: Best Practices
-```
-
----
-
-## Part 1: Tools with Multiple Parameters
-
-In Lesson 3, we created simple tools with one parameter. Real-world tools need more!
-
-### Basic Multi-Parameter Tool
+Real tools need multiple parameters and defaults:
 
 ```python
 from crewai_tools import tool
 
 @tool
-def search_text_in_file(file_path: str, search_term: str, case_sensitive: bool = False) -> str:
+def search_in_file(file_path: str, term: str, case_sensitive: bool = False) -> str:
     """
-    Search for a specific term in a file.
+    Search for text in a file.
 
     Args:
-        file_path: Path to the file to search
-        search_term: The text to search for
-        case_sensitive: Whether search should be case-sensitive (default: False)
+        file_path: File to search
+        term: Text to find
+        case_sensitive: Match case (default: False)
 
     Returns:
-        Lines containing the search term with line numbers
+        Lines containing the term with line numbers
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             lines = f.readlines()
 
         results = []
         for i, line in enumerate(lines, 1):
-            # Apply case sensitivity
-            line_to_check = line if case_sensitive else line.lower()
-            term_to_check = search_term if case_sensitive else search_term.lower()
+            check_line = line if case_sensitive else line.lower()
+            check_term = term if case_sensitive else term.lower()
 
-            if term_to_check in line_to_check:
+            if check_term in check_line:
                 results.append(f"Line {i}: {line.strip()}")
 
-        if results:
-            return "\n".join(results)
-        else:
-            return f"No matches found for '{search_term}'"
+        return "\n".join(results) if results else f"No matches for '{term}'"
 
     except FileNotFoundError:
-        return f"Error: File not found - {file_path}"
+        return f"File not found: {file_path}"
     except Exception as e:
-        return f"Error reading file: {str(e)}"
+        return f"Error: {str(e)}"
 ```
 
 **Key points:**
-- Multiple typed parameters
-- Default values (case_sensitive=False)
-- Clear docstring explaining each parameter
-- Error handling for different scenarios
+- Type hints help agents understand parameters
+- Default values for optional params
+- Specific error handling
+- Always return strings (never raise exceptions)
 
 ---
 
-## Part 2: Error Handling Patterns
+## Error Handling Patterns
 
-Good tools handle errors gracefully!
-
-### Pattern 1: Try-Except with Specific Errors
+**Pattern 1: Check before acting**
 
 ```python
 @tool
-def read_file_safely(file_path: str, max_size_mb: int = 10) -> str:
-    """
-    Safely read a file with size limits and error handling.
+def process_file(file_path: str) -> str:
+    """Process a file safely."""
+    # Validate first
+    if not os.path.exists(file_path):
+        return f"File not found: {file_path}"
 
-    Args:
-        file_path: Path to file
-        max_size_mb: Maximum file size in MB (default: 10)
+    if not os.path.isfile(file_path):
+        return f"Not a file: {file_path}"
 
-    Returns:
-        File contents or error message
-    """
-    import os
+    if os.path.getsize(file_path) > 10_000_000:  # 10MB limit
+        return "File too large (max 10MB)"
 
+    # Then process
     try:
-        # Check if file exists
-        if not os.path.exists(file_path):
-            return f"ERROR: File does not exist: {file_path}"
-
-        # Check file size
-        file_size = os.path.getsize(file_path)
-        max_size_bytes = max_size_mb * 1024 * 1024
-
-        if file_size > max_size_bytes:
-            return f"ERROR: File too large ({file_size / 1024 / 1024:.2f} MB). Max: {max_size_mb} MB"
-
-        # Read file
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path) as f:
             content = f.read()
-
-        return f"Successfully read {len(content)} characters from {file_path}"
-
-    except PermissionError:
-        return f"ERROR: Permission denied for file: {file_path}"
-    except UnicodeDecodeError:
-        return f"ERROR: File is not a text file or has encoding issues"
+        return f"Processed {len(content)} bytes"
     except Exception as e:
-        return f"ERROR: Unexpected error - {type(e).__name__}: {str(e)}"
+        return f"Error: {str(e)}"
 ```
 
-**Error handling best practices:**
-1. Check preconditions (file exists, size limits)
-2. Catch specific exceptions first
-3. Provide clear error messages
-4. Always return a string (never raise exceptions in tools)
-
----
-
-## Part 3: Wrapping System Commands
-
-This is crucial for our CTF solver! Let's wrap real steganography tools.
-
-### Pattern: Subprocess Wrapper
+**Pattern 2: Subprocess with timeout**
 
 ```python
 import subprocess
-from crewai_tools import tool
 
 @tool
-def run_exiftool(file_path: str) -> str:
-    """
-    Extract metadata from a file using exiftool.
-
-    Args:
-        file_path: Path to the file to analyze
-
-    Returns:
-        Metadata information or error message
-    """
+def run_system_command(command: str, timeout_sec: int = 30) -> str:
+    """Run system command with timeout."""
     try:
-        # Run exiftool command
         result = subprocess.run(
-            ['exiftool', file_path],
+            command.split(),
             capture_output=True,
             text=True,
-            timeout=30  # 30 second timeout
+            timeout=timeout_sec
         )
 
-        # Check if command succeeded
         if result.returncode == 0:
-            return f"Metadata for {file_path}:\n{result.stdout}"
+            return result.stdout
         else:
-            return f"Error running exiftool: {result.stderr}"
+            return f"Command failed: {result.stderr}"
 
-    except FileNotFoundError:
-        return "ERROR: exiftool not installed. Install with: sudo apt install exiftool"
     except subprocess.TimeoutExpired:
-        return "ERROR: exiftool timed out (file too large or hung)"
+        return f"Command timed out after {timeout_sec}s"
+    except FileNotFoundError:
+        return f"Command not found: {command.split()[0]}"
     except Exception as e:
-        return f"ERROR: {type(e).__name__}: {str(e)}"
+        return f"Error: {str(e)}"
 ```
 
-### Pattern: Command with Options
+---
+
+## Wrapping Steganography Tools
+
+Real example: wrapping steghide
 
 ```python
+import subprocess
+import os
+
 @tool
-def run_binwalk(file_path: str, extract: bool = False) -> str:
+def extract_with_steghide(file_path: str, password: str = "") -> str:
     """
-    Analyze file for embedded files and data using binwalk.
+    Extract hidden data using steghide.
 
     Args:
-        file_path: Path to file to analyze
-        extract: Whether to extract found files (default: False)
+        file_path: Image file to analyze
+        password: Steghide password (default: empty)
 
     Returns:
-        Binwalk analysis results
+        Extracted data or error message
     """
+    # Check steghide is installed
     try:
-        # Build command
-        cmd = ['binwalk']
+        subprocess.run(['steghide', '--version'], capture_output=True, timeout=5)
+    except FileNotFoundError:
+        return "steghide not installed. Run: sudo apt install steghide"
 
-        if extract:
-            cmd.append('-e')  # Extract files
+    # Check file exists
+    if not os.path.exists(file_path):
+        return f"File not found: {file_path}"
 
-        cmd.append(file_path)
+    # Run steghide
+    output_file = f"{file_path}.extracted"
 
-        # Run command
+    try:
+        cmd = [
+            'steghide', 'extract',
+            '-sf', file_path,        # source file
+            '-xf', output_file,      # extract to
+            '-p', password,          # password
+            '-f'                     # force overwrite
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+        if result.returncode == 0 and os.path.exists(output_file):
+            # Read extracted data
+            with open(output_file) as f:
+                data = f.read()
+
+            # Clean up
+            os.remove(output_file)
+
+            # Check for flag
+            if 'CTF{' in data or 'FLAG{' in data:
+                return f"FLAG FOUND!\n{data}"
+
+            return f"Extracted data:\n{data[:500]}"  # Limit output
+
+        return "No embedded data found"
+
+    except subprocess.TimeoutExpired:
+        return "steghide timed out (30s)"
+    except Exception as e:
+        return f"Error: {str(e)}"
+```
+
+**Why this pattern works:**
+- Checks tool is installed first
+- Validates inputs
+- Uses timeout to prevent hanging
+- Captures both stdout and stderr
+- Cleans up temp files
+- Limits output length
+- Highlights flags
+
+---
+
+## Helper Function Pattern
+
+Don't repeat yourself. Create helpers:
+
+```python
+def check_tool_installed(tool_name: str) -> bool:
+    """Check if a system tool is available."""
+    try:
+        subprocess.run(
+            [tool_name, '--version'],
+            capture_output=True,
+            timeout=5,
+            stderr=subprocess.DEVNULL
+        )
+        return True
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
+
+
+@tool
+def use_binwalk(file_path: str) -> str:
+    """Analyze file for embedded data using binwalk."""
+    if not check_tool_installed('binwalk'):
+        return "binwalk not installed"
+
+    if not os.path.exists(file_path):
+        return f"File not found: {file_path}"
+
+    try:
         result = subprocess.run(
-            cmd,
+            ['binwalk', file_path],
             capture_output=True,
             text=True,
             timeout=60
         )
-
-        if result.returncode == 0:
-            output = result.stdout
-
-            if "DECIMAL" in output:
-                # Binwalk found something!
-                return f"Binwalk found embedded data:\n{output}"
-            else:
-                return f"Binwalk found nothing suspicious in {file_path}"
-        else:
-            return f"Binwalk error: {result.stderr}"
-
-    except FileNotFoundError:
-        return "ERROR: binwalk not installed. Install with: sudo apt install binwalk"
-    except subprocess.TimeoutExpired:
-        return "ERROR: binwalk timed out"
+        return result.stdout if result.returncode == 0 else result.stderr
     except Exception as e:
-        return f"ERROR: {str(e)}"
+        return f"Error: {str(e)}"
 ```
 
 ---
 
-## Part 4: Structured Data Returns
+## Structured Output
 
-Sometimes you need to return complex data, not just strings.
-
-### Pattern: JSON Returns
-
-```python
-import json
-from crewai_tools import tool
-
-@tool
-def analyze_image_metadata(image_path: str) -> str:
-    """
-    Analyze image metadata and return structured information.
-
-    Args:
-        image_path: Path to image file
-
-    Returns:
-        JSON string with structured metadata
-    """
-    from PIL import Image
-    import os
-
-    try:
-        # Open image
-        img = Image.open(image_path)
-
-        # Collect metadata
-        metadata = {
-            "file_name": os.path.basename(image_path),
-            "file_size_bytes": os.path.getsize(image_path),
-            "format": img.format,
-            "mode": img.mode,
-            "width": img.width,
-            "height": img.height,
-            "total_pixels": img.width * img.height,
-            "has_exif": hasattr(img, '_getexif') and img._getexif() is not None
-        }
-
-        # Return as formatted JSON
-        return json.dumps(metadata, indent=2)
-
-    except Exception as e:
-        error_data = {
-            "error": str(e),
-            "error_type": type(e).__name__
-        }
-        return json.dumps(error_data, indent=2)
-```
-
-**Note:** Return JSON as a string! Agents can parse it.
-
----
-
-## Part 5: Real Steganography Tools
-
-Let's create actual tools for our CTF solver!
-
-### Tool 1: Steghide Wrapper
+Sometimes you want to format results consistently:
 
 ```python
 @tool
-def check_steghide(file_path: str, password: str = "") -> str:
-    """
-    Try to extract hidden data from an image using steghide.
+def analyze_image_metadata(file_path: str) -> str:
+    """Extract image metadata using exiftool."""
+    if not check_tool_installed('exiftool'):
+        return "exiftool not installed"
 
-    Args:
-        file_path: Path to image file (JPG or BMP)
-        password: Password to try (default: empty string)
-
-    Returns:
-        Extraction result or error message
-    """
-    import subprocess
-    import os
+    if not os.path.exists(file_path):
+        return f"File not found: {file_path}"
 
     try:
-        # Create temp output file
-        output_file = f"/tmp/steghide_output_{os.getpid()}.txt"
-
-        # Build command
-        cmd = ['steghide', 'extract', '-sf', file_path, '-xf', output_file]
-
-        if password:
-            cmd.extend(['-p', password])
-        else:
-            cmd.extend(['-p', ''])  # Empty password
-
-        # Run steghide
         result = subprocess.run(
-            cmd,
+            ['exiftool', file_path],
             capture_output=True,
             text=True,
             timeout=30
         )
 
-        # Check if extraction succeeded
-        if result.returncode == 0:
-            # Read extracted data
-            if os.path.exists(output_file):
-                with open(output_file, 'r') as f:
-                    data = f.read()
-                os.remove(output_file)  # Clean up
-                return f"Steghide extraction successful!\nExtracted data:\n{data}"
-            else:
-                return "Steghide succeeded but no output file created"
-        else:
-            if "could not extract" in result.stderr.lower():
-                return "No steghide data found or wrong password"
-            else:
-                return f"Steghide error: {result.stderr}"
+        if result.returncode != 0:
+            return f"exiftool failed: {result.stderr}"
 
-    except FileNotFoundError:
-        return "ERROR: steghide not installed. Install with: sudo apt install steghide"
-    except subprocess.TimeoutExpired:
-        return "ERROR: steghide timed out"
+        # Parse output into structured format
+        metadata = {}
+        for line in result.stdout.split('\n'):
+            if ':' in line:
+                key, value = line.split(':', 1)
+                metadata[key.strip()] = value.strip()
+
+        # Format for readability
+        output = ["=== METADATA ==="]
+        for key, value in metadata.items():
+            output.append(f"{key}: {value}")
+
+        return "\n".join(output)
+
     except Exception as e:
-        return f"ERROR: {str(e)}"
+        return f"Error: {str(e)}"
 ```
 
-### Tool 2: String Extractor
+---
+
+## Tool Testing
+
+Test your tools independently before giving them to agents:
+
+```python
+if __name__ == '__main__':
+    # Test the tool directly
+    print("Testing steghide tool...")
+
+    result = extract_with_steghide("test_image.jpg", password="")
+    print(result)
+
+    result = extract_with_steghide("test_image.jpg", password="secret")
+    print(result)
+
+    result = extract_with_steghide("nonexistent.jpg")
+    print(result)
+```
+
+---
+
+## Common Issues
+
+**Tool doesn't execute:**
+
+Agent doesn't call your tool. Usually means:
+- Docstring is unclear
+- Tool name is confusing
+- Task description doesn't hint at tool usage
+
+Fix: Make docstring very explicit about what the tool does.
+
+**Tool returns None:**
+
+Breaks agent execution. Always return a string:
+```python
+# Bad
+@tool
+def bad_tool(x):
+    if x:
+        return "ok"
+    # Returns None if x is False!
+
+# Good
+@tool
+def good_tool(x):
+    if x:
+        return "ok"
+    return "Input was false"  # Always return something
+```
+
+**Tool hangs:**
+
+Always use timeouts on subprocess calls:
+```python
+subprocess.run(cmd, timeout=30)  # 30 second max
+```
+
+**Large output breaks context:**
+
+LLMs have token limits. Truncate long outputs:
+```python
+output = long_string[:1000] + "..." if len(long_string) > 1000 else long_string
+return output
+```
+
+---
+
+## Best Practices
+
+1. **Clear docstrings** - Agents read these to decide which tool to use
+2. **Type hints** - Help agents understand parameters
+3. **Error handling** - Never raise exceptions, return error strings
+4. **Timeouts** - Prevent tools from hanging forever
+5. **Validate inputs** - Check files exist, parameters are valid
+6. **Limit output** - Don't return megabytes of text
+7. **Clean up** - Remove temp files
+8. **Test independently** - Run tools standalone first
+9. **Check dependencies** - Verify system tools are installed
+10. **Return strings** - Always, even for errors
+
+---
+
+## Practice Exercise
+
+Create `examples/my_first_tool.py` that wraps the `strings` command:
 
 ```python
 @tool
 def extract_strings(file_path: str, min_length: int = 4) -> str:
     """
-    Extract printable strings from a binary file.
+    Extract printable strings from a file.
 
     Args:
-        file_path: Path to file
+        file_path: File to analyze
         min_length: Minimum string length (default: 4)
 
     Returns:
-        Found strings
+        Printable strings found in the file
     """
-    import subprocess
-
-    try:
-        # Run strings command
-        result = subprocess.run(
-            ['strings', '-n', str(min_length), file_path],
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
-
-        if result.returncode == 0:
-            strings = result.stdout.strip().split('\n')
-
-            # Filter interesting strings (potential flags, URLs, etc.)
-            interesting = []
-            for s in strings:
-                s = s.strip()
-                if len(s) >= min_length:
-                    # Check for flag formats
-                    if 'CTF{' in s or 'FLAG{' in s or 'flag{' in s:
-                        interesting.insert(0, f"⭐ POTENTIAL FLAG: {s}")
-                    # Check for URLs
-                    elif 'http://' in s or 'https://' in s:
-                        interesting.append(f"🔗 URL: {s}")
-                    # Check for base64-like
-                    elif len(s) > 20 and s.replace('=', '').isalnum():
-                        interesting.append(f"🔤 BASE64?: {s}")
-
-            if interesting:
-                return "Interesting strings found:\n" + "\n".join(interesting[:20])
-            else:
-                return f"No particularly interesting strings found (found {len(strings)} total strings)"
-
-        else:
-            return f"Strings command error: {result.stderr}"
-
-    except FileNotFoundError:
-        return "ERROR: 'strings' command not found"
-    except Exception as e:
-        return f"ERROR: {str(e)}"
+    # Your implementation here
+    pass
 ```
-
-### Tool 3: File Entropy Calculator
-
-```python
-@tool
-def calculate_entropy(file_path: str) -> str:
-    """
-    Calculate Shannon entropy of a file (measure of randomness).
-    High entropy suggests encryption or compression.
-
-    Args:
-        file_path: Path to file
-
-    Returns:
-        Entropy value and interpretation
-    """
-    import math
-    from collections import Counter
-
-    try:
-        # Read file as bytes
-        with open(file_path, 'rb') as f:
-            data = f.read()
-
-        if len(data) == 0:
-            return "ERROR: File is empty"
-
-        # Count byte frequencies
-        byte_counts = Counter(data)
-
-        # Calculate Shannon entropy
-        entropy = 0
-        for count in byte_counts.values():
-            probability = count / len(data)
-            entropy -= probability * math.log2(probability)
-
-        # Interpret entropy
-        interpretation = ""
-        if entropy < 3:
-            interpretation = "Very low (likely plain text or simple data)"
-        elif entropy < 5:
-            interpretation = "Low to medium (normal files)"
-        elif entropy < 7:
-            interpretation = "Medium to high (compressed or mixed data)"
-        else:
-            interpretation = "Very high (encrypted or random data)"
-
-        return f"""
-Entropy Analysis for {file_path}:
-- Shannon Entropy: {entropy:.4f} bits per byte
-- Maximum possible: 8.0 bits per byte
-- Interpretation: {interpretation}
-- File size: {len(data)} bytes
-
-⚠️  High entropy (>7.5) may indicate:
-- Encrypted data
-- Compressed archives
-- Random data
-- Steganography payload
-"""
-
-    except Exception as e:
-        return f"ERROR: {str(e)}"
-```
-
----
-
-## Part 6: Tool Testing & Debugging
-
-How to test your tools before giving them to agents.
-
-### Testing Pattern
-
-```python
-def test_tool():
-    """Test a tool manually before using with agents."""
-
-    print("Testing extract_strings tool...")
-
-    # Test 1: Normal file
-    result = extract_strings("/etc/hosts")
-    print("Test 1 - Normal file:")
-    print(result)
-    print()
-
-    # Test 2: Non-existent file
-    result = extract_strings("/nonexistent/file.txt")
-    print("Test 2 - Non-existent file:")
-    print(result)
-    print()
-
-    # Test 3: Binary file
-    result = extract_strings("/bin/ls")
-    print("Test 3 - Binary file:")
-    print(result)
-    print()
-
-if __name__ == "__main__":
-    test_tool()
-```
-
----
-
-## Part 7: Tool Best Practices
-
-### ✅ DO's
-
-1. **Clear Docstrings**
-   ```python
-   @tool
-   def my_tool(param: str) -> str:
-       """
-       Clear one-line summary.
-
-       Detailed explanation of what the tool does.
-
-       Args:
-           param: What this parameter is for
-
-       Returns:
-           What the tool returns
-       """
-   ```
-
-2. **Type Hints**
-   ```python
-   def my_tool(file_path: str, count: int = 5) -> str:
-   ```
-
-3. **Error Handling**
-   ```python
-   try:
-       # do something
-   except SpecificError:
-       return "Clear error message"
-   ```
-
-4. **Return Strings**
-   ```python
-   return "Success: result here"  # ✅
-   return {"data": "value"}       # ❌ Return JSON string instead
-   ```
-
-5. **Timeouts for External Commands**
-   ```python
-   subprocess.run(cmd, timeout=30)
-   ```
-
-### ❌ DON'Ts
-
-1. **Don't Raise Exceptions**
-   ```python
-   # BAD
-   raise ValueError("Error!")
-
-   # GOOD
-   return "ERROR: Invalid value"
-   ```
-
-2. **Don't Return Complex Objects**
-   ```python
-   # BAD
-   return {"key": "value"}
-
-   # GOOD
-   return json.dumps({"key": "value"})
-   ```
-
-3. **Don't Forget Error Cases**
-   ```python
-   # BAD - no error handling
-   with open(file) as f:
-       return f.read()
-
-   # GOOD
-   try:
-       with open(file) as f:
-           return f.read()
-   except FileNotFoundError:
-       return "ERROR: File not found"
-   ```
-
----
-
-## 🧪 Practice Exercises
-
-### Exercise 1: Password List Tool
-
-Create a tool that tries steghide with multiple passwords from a list.
 
 **Requirements:**
-- Accept file path and list of passwords
-- Try each password
-- Return which password worked (if any)
-- Handle errors gracefully
+- Check if `strings` command is available
+- Validate file exists
+- Use subprocess with timeout
+- Return first 50 strings max
+- Handle errors
 
-<details>
-<summary>Click for solution</summary>
+**Test it on:** `/bin/ls` or any binary file
 
+---
+
+## Key Takeaways
+
+**Good tool structure:**
 ```python
 @tool
-def try_steghide_passwords(file_path: str, passwords: list) -> str:
-    """
-    Try multiple passwords with steghide.
+def tool_name(param: type, param2: type = default) -> str:
+    """Clear description.
 
     Args:
-        file_path: Path to image
-        passwords: List of passwords to try
+        param: What it is
+        param2: What it is
 
     Returns:
-        Result of password attempts
+        What you get back
     """
-    import subprocess
-
-    # Note: Can't pass list directly to agents easily
-    # Better approach: pass comma-separated string
-    if isinstance(passwords, str):
-        password_list = [p.strip() for p in passwords.split(',')]
-    else:
-        password_list = passwords
-
-    for password in password_list:
-        try:
-            result = subprocess.run(
-                ['steghide', 'extract', '-sf', file_path, '-p', password, '-xf', '/tmp/test'],
-                capture_output=True,
-                timeout=10
-            )
-
-            if result.returncode == 0:
-                return f"SUCCESS! Password found: '{password}'"
-        except:
-            continue
-
-    return f"No valid password found in list of {len(password_list)} passwords"
+    # 1. Validate inputs
+    # 2. Try operation with timeout
+    # 3. Handle errors
+    # 4. Return formatted string
 ```
-</details>
 
-### Exercise 2: File Type Identifier
-
-Create a tool that identifies the true file type (even if extension is wrong).
-
-**Requirements:**
-- Check file signature (magic bytes)
-- Compare with file extension
-- Return true type vs claimed type
+**Error handling priority:**
+1. Check dependencies (tool installed?)
+2. Validate inputs (file exists?)
+3. Try operation with timeout
+4. Catch specific exceptions
+5. Always return helpful error message
 
 ---
 
-## 🎓 Summary
+## Next Steps
 
-You now know how to create:
+You can now wrap any system command as a tool. Next lesson: multi-agent coordination.
 
-✅ **Multi-parameter tools** with defaults
-✅ **Error handling** that never crashes
-✅ **System command wrappers** for external tools
-✅ **Structured data returns** using JSON
-✅ **Real steganography tools** for CTF solving
-✅ **Tool testing** patterns
-✅ **Best practices** for production tools
+[Continue to Lesson 5: Multi-Agent Systems →](./LESSON_05.md)
 
 ---
 
-## 🚀 What's Next?
-
-**Next lesson: [Lesson 5 - Multi-Agent Coordination](./LESSON_05.md)**
-
-We'll learn:
-- Running multiple agents together
-- Agent communication and context sharing
-- Sequential vs parallel workflows
-- Building your first multi-agent crew
-
----
-
-## 📝 Homework
-
-Before Lesson 5, create these tools:
-
-1. **zsteg wrapper** - Tool for PNG/BMP analysis
-2. **Base64 decoder** - Detect and decode Base64 strings
-3. **File comparator** - Compare two files for differences
-
----
-
-**🎉 Congratulations! You can now create professional-grade tools for AI agents!**
-
-*Previous: [Lesson 3 - Your First Agent](./LESSON_03.md)*
-*Next: [Lesson 5 - Multi-Agent Coordination](./LESSON_05.md)*
+*Tip: When wrapping commands, run them manually in terminal first to understand their output format. This helps you parse the results correctly.*
