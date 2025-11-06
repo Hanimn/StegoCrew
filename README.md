@@ -5,7 +5,7 @@
 
   ### Multi-Agent CTF Steganography Solver
 
-  > **Learn CrewAI by building a real-world CTF challenge solver**
+  > Learn CrewAI by building a real-world CTF challenge solver
 
   [![GitHub](https://img.shields.io/badge/GitHub-StegoCrew-blue?logo=github)](https://github.com/Hanimn/StegoCrew)
   [![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)](https://python.org)
@@ -15,136 +15,131 @@
 
 ---
 
-A comprehensive, beginner-friendly tutorial project that teaches you how to build multi-agent AI systems using CrewAI by creating an automated steganography challenge solver for CTF competitions.
+## Why This Project Exists
+
+I got tired of manually running steghide, binwalk, exiftool, and strings on every CTF challenge. After spending an hour on a challenge that turned out to be basic LSB steganography, I realized this workflow could be automated.
+
+But instead of writing a bash script, I used this as an opportunity to learn CrewAI and multi-agent systems. This project is both a functional CTF solver and a complete learning resource for anyone wanting to understand how AI agents work together.
+
+If you're new to CrewAI or multi-agent systems, this is a practical way to learn. If you're a CTF player, you'll get a tool that actually works.
 
 ---
 
-## 🎓 What You'll Build
+## What You're Building
 
-A **5-agent AI system** that automatically analyzes and solves steganography challenges:
+A 5-agent system that automatically analyzes suspicious files and extracts hidden data:
 
 ```
 Suspicious File → [AI Agent Team] → Solution + Flag
 ```
 
-**The Team:**
-- 🔍 **Reconnaissance Agent** - Analyzes file structure and metadata
-- 🛠️ **Steganography Expert** - Extracts hidden data using specialized tools
-- 🧩 **Pattern Hunter** - Detects encodings and patterns
-- 🔐 **Decoder Agent** - Decrypts and decodes data
-- 📊 **Orchestrator** - Coordinates the team and compiles results
+**Agent Team:**
+- **Reconnaissance Agent** - File analysis and metadata extraction
+- **Steganography Expert** - Runs steghide, binwalk, zsteg, etc.
+- **Pattern Hunter** - Detects encodings, patterns, anomalies
+- **Decoder Agent** - Base64, hex, ROT13, XOR decoding
+- **Orchestrator** - Coordinates results and generates reports
+
+Each agent specializes in one aspect of the challenge, then shares findings with the team. Sequential workflow ensures agents build on each other's discoveries.
 
 ---
 
-## 🎯 Learning Objectives
+## Course Structure
 
-This project will teach you:
+8 lessons taking you from zero to a complete working system:
 
-✅ **Multi-Agent Systems** - How AI agents work together as a team
-✅ **CrewAI Framework** - Creating agents, tools, tasks, and crews
-✅ **Tool Integration** - Wrapping system tools for agent use
-✅ **Workflow Design** - Sequential task processing and context sharing
-✅ **Real-world AI** - Building practical applications with LLMs
-✅ **CTF Techniques** - Steganography detection and solving methods
+| Lesson | Topic | Time | Status |
+|--------|-------|------|--------|
+| [Lesson 1](./docs/lessons/LESSON_01.md) | Multi-Agent Systems Concepts | 1-2h | Ready |
+| [Lesson 2](./docs/lessons/LESSON_02.md) | Environment Setup | 1-2h | Ready |
+| [Lesson 3](./docs/lessons/LESSON_03.md) | Your First Agent | 2-3h | Ready |
+| [Lesson 4](./docs/lessons/LESSON_04.md) | Custom Tools | 2-3h | Ready |
+| [Lesson 5](./docs/lessons/LESSON_05.md) | Multi-Agent Coordination | 3-4h | Ready |
+| [Lesson 6](./docs/lessons/LESSON_06.md) | Steganography Tools Integration | 3-4h | Ready |
+| [Lesson 7](./docs/lessons/LESSON_07.md) | Complete MVP Build | 4-6h | Ready |
+| [Lesson 8](./docs/lessons/LESSON_08.md) | Testing & Deployment | 2-3h | Ready |
 
----
-
-## 🚀 Quick Start
-
-### **Step 1: Read the Learning Guide**
+**Total time:** 2-3 weeks part-time, 1 week full-time
 
 Start here: **[LEARNING_GUIDE.md](./LEARNING_GUIDE.md)**
 
-This is your roadmap through the entire course.
+---
 
-### **Step 2: Begin Lesson 1**
+## Prerequisites
 
-Jump into: **[Lesson 1: Understanding Multi-Agent Systems](./docs/lessons/LESSON_01.md)**
+**You need:**
+- Basic Python (functions, classes, imports)
+- Command line basics
+- Text editor or IDE
 
-Learn the core concepts before writing code.
+**You don't need:**
+- ML/AI experience
+- Advanced Python
+- Prior CrewAI knowledge
+- CTF expertise
 
-### **Step 3: Reference the Glossary**
-
-Bookmark: **[GLOSSARY.md](./docs/GLOSSARY.md)**
-
-All technical terms explained in simple language.
+If you can write a Python function, you're ready.
 
 ---
 
-## 📚 Course Structure
+## Tech Stack & Tool Choices
 
-| Lesson | Topic | Duration | Status |
-|--------|-------|----------|--------|
-| **[Lesson 1](./docs/lessons/LESSON_01.md)** | Understanding Multi-Agent Systems | 1-2 hours | ✅ Ready |
-| **[Lesson 2](./docs/lessons/LESSON_02.md)** | Environment Setup | 1-2 hours | ✅ Ready |
-| **[Lesson 3](./docs/lessons/LESSON_03.md)** | Your First Agent (Hello World) | 2-3 hours | ✅ Ready |
-| **[Lesson 4](./docs/lessons/LESSON_04.md)** | Custom Tools Deep Dive | 2-3 hours | ✅ Ready |
-| **[Lesson 5](./docs/lessons/LESSON_05.md)** | Multi-Agent Coordination | 3-4 hours | ✅ Ready |
-| **[Lesson 6](./docs/lessons/LESSON_06.md)** | Real Steganography Tools | 3-4 hours | ✅ Ready |
-| **[Lesson 7](./docs/lessons/LESSON_07.md)** | Building the Complete MVP | 4-6 hours | ✅ Ready |
-| **[Lesson 8](./docs/lessons/LESSON_08.md)** | Testing, Debugging & Deployment | 2-3 hours | ✅ Ready |
+**Why CrewAI?**
 
-**Total Time:** 2-3 weeks part-time, 1 week full-time
+I evaluated AutoGPT, LangGraph, and CrewAI. CrewAI won because:
+- Clean API for defining agents and tasks
+- Built-in context sharing between agents
+- Good tool integration patterns
+- Active development and community
 
----
+LangGraph offers more control but has a steeper learning curve. AutoGPT felt too opinionated for this use case.
 
-## 📋 Prerequisites
+**Why Claude over GPT-4?**
 
-### **You Should Know:**
-- ✅ Basic Python (functions, classes, imports)
-- ✅ Command line basics (cd, ls, running commands)
-- ✅ Basic understanding of files and APIs
+After testing both extensively:
+- Claude handles tool-calling more reliably (in my experience)
+- Better at following complex instructions
+- Cheaper for development/testing
 
-### **You Don't Need:**
-- ❌ Machine learning experience
-- ❌ Advanced Python skills
-- ❌ Prior knowledge of CrewAI or LangChain
-- ❌ Steganography expertise
+GPT-4 is faster but I hit more tool-calling errors. Your results may vary - the code works with both.
 
-**If you know Python basics, you're ready to start!**
+**Steganography Tools:**
+- steghide - Password-protected embedding
+- binwalk - File carving and analysis
+- exiftool - Metadata extraction
+- zsteg - PNG/BMP LSB analysis
+- strings - Basic text extraction
+
+All wrapped as CrewAI tools with proper error handling.
 
 ---
 
-## 🛠️ Technology Stack
-
-### **Core Framework**
-- Python 3.10+
-- CrewAI framework
-- LangChain tools
-
-### **AI Models**
-- Anthropic Claude (recommended)
-- OpenAI GPT-4 (alternative)
-- Local models via Ollama (optional)
-
-### **Steganography Tools**
-- steghide, binwalk, exiftool
-- zsteg, foremost, strings
-- And more...
-
----
-
-## 📖 Documentation Structure
+## Project Structure
 
 ```
 StegoCrew/
 ├── README.md                    ← You are here
-├── LEARNING_GUIDE.md           ← Start here!
-├── Claude.md                    ← Original project plan
+├── LEARNING_GUIDE.md           ← Start here
+├── requirements.txt            ← Dependencies
 │
 ├── docs/
-│   ├── GLOSSARY.md             ← All terms explained
-│   ├── lessons/
-│   │   ├── LESSON_01.md        ← Multi-agent concepts
-│   │   ├── LESSON_02.md        ← Environment setup
-│   │   └── ...                 ← More lessons
-│   └── reference/
-│       └── ...                 ← Technical references
+│   ├── GLOSSARY.md             ← Terms explained
+│   └── lessons/
+│       ├── LESSON_01.md        ← Concepts
+│       ├── LESSON_02.md        ← Setup
+│       └── ...                 ← More lessons
 │
 ├── examples/
-│   └── ...                     ← Code examples
+│   ├── 01_first_agent.py       ← Hello World agent
+│   ├── 02_first_tool.py        ← Custom tools
+│   ├── ...
+│   └── 06_complete_stegocrew.py ← Full system
 │
-└── src/                        ← We'll build this together!
+├── tests/
+│   ├── test_challenges.py      ← Challenge tests
+│   └── benchmark.py            ← Performance tests
+│
+└── src/                        ← Production structure
     ├── agents/
     ├── tools/
     ├── tasks/
@@ -153,128 +148,135 @@ StegoCrew/
 
 ---
 
-## 🎯 Project Goals
+## Quick Start
 
-### **Educational Goals**
-1. Master CrewAI fundamentals through hands-on practice
-2. Understand how multi-agent systems work
-3. Learn to integrate AI with existing tools
-4. Build a complete, working project you can showcase
+1. Clone the repo
+2. Read [LEARNING_GUIDE.md](./LEARNING_GUIDE.md)
+3. Start with [Lesson 1](./docs/lessons/LESSON_01.md)
+4. Work through each lesson sequentially
+5. Run the examples
+6. Build the complete system
 
-### **Technical Goals**
-1. Create a CTF solver with 80%+ success rate on common challenges
-2. Build modular, maintainable code
-3. Implement proper error handling and logging
-4. Generate comprehensive solution reports
-
----
-
-## 🧭 Learning Path
-
-### **Phase 1: Foundations (Week 1)**
-- Understand multi-agent concepts
-- Set up development environment
-- Build your first simple agent
-- Create custom tools
-
-**Outcome:** Working agent that can use basic tools
-
-### **Phase 2: Integration (Week 2)**
-- Build multi-agent crews
-- Integrate steganography tools
-- Implement agent communication
-- Handle file analysis
-
-**Outcome:** Multiple agents working together
-
-### **Phase 3: Production (Week 3)**
-- Complete MVP implementation
-- Comprehensive testing
-- Debugging and optimization
-- Documentation and polish
-
-**Outcome:** Production-ready CTF solver
+Each lesson has:
+- Concepts explained
+- Working code examples
+- Practice exercises
+- Troubleshooting tips
 
 ---
 
-## 💡 Teaching Philosophy
+## What You'll Learn
 
-This course follows these principles:
+**Multi-Agent Systems:**
+- How agents communicate and share context
+- Task delegation and workflow design
+- Tool integration patterns
+- Error handling across agents
 
-1. **Learn by Building** - Hands-on coding from day one
-2. **Explain the Why** - Understand concepts, not just syntax
-3. **Iterate and Improve** - Start simple, add complexity gradually
-4. **Real-world Application** - Build something actually useful
-5. **Support Learning** - Clear docs, examples, and troubleshooting
+**CrewAI Specifics:**
+- Agent configuration (role, goal, backstory)
+- Tool wrapping and @tool decorator
+- Task creation and context chains
+- Sequential vs. hierarchical workflows
+
+**Practical Skills:**
+- Integrating system tools with AI agents
+- Building modular, maintainable agent systems
+- Testing and debugging multi-agent workflows
+- Real-world CTF steganography techniques
 
 ---
 
-## 🆘 Getting Help
+## Success Rate & Limitations
 
-### **Documentation**
-- [LEARNING_GUIDE.md](./LEARNING_GUIDE.md) - Main course guide
+**What this solves well:**
+- Basic steganography (LSB, file embedding, metadata)
+- Common CTF challenge formats
+- Standard encoding schemes
+- Password-protected steghide (with wordlist)
+
+**What it struggles with:**
+- Advanced cryptography (that's not the goal)
+- Custom/exotic steganography methods
+- Challenges requiring domain-specific knowledge
+- Highly obfuscated data
+
+Expected success rate on beginner-intermediate CTF stego challenges: 60-80%
+
+---
+
+## After This Course
+
+Once you complete the project, you can:
+
+**Extend StegoCrew:**
+- Add audio steganography (LSB in WAV files)
+- Implement password brute-forcing
+- Add machine learning for anomaly detection
+- Build a web interface
+
+**Build Other Systems:**
+- Research assistants
+- Code review agents
+- Content creation pipelines
+- Data analysis teams
+
+The patterns you learn here transfer to any multi-agent system.
+
+---
+
+## Getting Help
+
+**Documentation:**
+- [LEARNING_GUIDE.md](./LEARNING_GUIDE.md) - Course roadmap
 - [GLOSSARY.md](./docs/GLOSSARY.md) - Term definitions
-- Lesson files - Step-by-step instructions
+- Lesson files - Step-by-step guides
+- Code examples - Reference implementations
 
-### **Stuck on Something?**
-1. Check the glossary for term definitions
-2. Review previous lesson materials
-3. Look at code examples
-4. Ask your mentor (that's me!)
-
----
-
-## 🎓 What You'll Gain
-
-By completing this project, you'll have:
-
-1. **Portfolio Project** - A complete, working multi-agent system
-2. **Practical Skills** - Real-world AI development experience
-3. **Deep Understanding** - Not just copying code, but understanding how it works
-4. **CTF Knowledge** - Steganography techniques and tools
-5. **Framework Mastery** - CrewAI proficiency you can apply to other projects
+**Troubleshooting:**
+- Check the glossary first
+- Review previous lessons
+- Run provided examples to verify setup
+- Lesson 2 has common setup issues covered
 
 ---
 
-## 🌟 Beyond This Course
+## Contributing
 
-After completing this project, you can:
+Found a bug? Have an improvement? Contributions welcome.
 
-- Build other multi-agent systems (research assistants, content creators, etc.)
-- Contribute to the CrewAI community
-- Extend this project with new features
-- Apply these concepts to your own projects
-- Help others learn!
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
----
-
-## 📜 License & Usage
-
-This project is for **educational purposes**. Use responsibly:
-- ✅ Learning and practicing CTF skills
-- ✅ Authorized CTF competitions
-- ✅ Educational demonstrations
-- ❌ Unauthorized access to systems
-- ❌ Malicious purposes
+Common contributions:
+- New steganography tool integrations
+- Additional test challenges
+- Documentation improvements
+- Bug fixes
 
 ---
 
-## 🙏 Acknowledgments
+## License & Responsible Use
 
-- **CrewAI Team** - For the amazing framework
-- **CTF Community** - For knowledge sharing
-- **You** - For embarking on this learning journey!
+Educational project licensed under MIT. See [LICENSE](./LICENSE).
 
----
+Use this for:
+- Learning CTF techniques
+- Authorized CTF competitions
+- Educational demonstrations
+- Personal skill development
 
-## 🚀 Ready to Begin?
-
-**Start your journey here:** [LEARNING_GUIDE.md](./LEARNING_GUIDE.md)
-
-**Questions?** Feel free to ask your mentor (me!) anything along the way.
+Don't use for unauthorized access to systems or malicious purposes.
 
 ---
 
-**Let's build something amazing together! 🎉**
+## Credits
 
-*Last Updated: 2025-11-04*
+- CrewAI team for the framework
+- CTF community for technique documentation
+- Steganography tool developers
+
+---
+
+**Ready to start?** → [LEARNING_GUIDE.md](./LEARNING_GUIDE.md)
+
+*Last Updated: 2025-11-06*
