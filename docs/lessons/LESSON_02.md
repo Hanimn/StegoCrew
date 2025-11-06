@@ -2,100 +2,49 @@
 
 **Duration:** 1-2 hours
 **Prerequisites:** Lesson 1 completed
-**Goal:** Set up a complete working environment for building our CTF solver
 
 ---
 
-## 🎯 What You'll Learn
+## Setup Overview
 
-By the end of this lesson, you'll have:
-1. ✅ Python virtual environment configured
-2. ✅ CrewAI and dependencies installed
-3. ✅ System steganography tools installed
-4. ✅ API keys configured
-5. ✅ Project structure created
-6. ✅ Test environment verified working
+This part is tedious but necessary. Get it right once and you're set for the entire project.
 
----
-
-## 📋 Installation Checklist
-
-```
-[ ] Python 3.10+ installed
-[ ] Virtual environment created
-[ ] CrewAI installed
-[ ] Python dependencies installed
-[ ] System tools installed (steghide, binwalk, etc.)
-[ ] API key configured
-[ ] Project structure created
-[ ] Test run successful
-```
+We'll install:
+- Python 3.10+ and virtual environment
+- CrewAI framework
+- Steganography tools (steghide, binwalk, exiftool)
+- API key configuration
 
 ---
 
-## Part 1: Python Environment Setup
+## Python Environment
 
-### Step 1: Check Python Version
-
-First, verify you have Python 3.10 or higher:
+**Check your Python version:**
 
 ```bash
-python --version
-# or
 python3 --version
 ```
 
-**Expected output:** `Python 3.10.x` or higher
+Need Python 3.10 or higher. If not:
+- Ubuntu/Debian: `sudo apt install python3.10 python3.10-venv`
+- Mac: `brew install python@3.10`
+- Windows: Download from python.org or use WSL2
 
-**If you don't have Python 3.10+:**
-- **Ubuntu/Debian:** `sudo apt install python3.10 python3.10-venv`
-- **Mac:** `brew install python@3.10`
-- **Windows:** Download from https://python.org
-
----
-
-### Step 2: Create Project Directory
+**Create project and virtual environment:**
 
 ```bash
-# Navigate to where you want to create the project
-cd ~/projects  # or wherever you keep projects
-
-# Create project directory
 mkdir ctf-stego-solver
 cd ctf-stego-solver
-```
 
----
-
-### Step 3: Create Virtual Environment
-
-A virtual environment isolates your project dependencies:
-
-```bash
-# Create virtual environment
 python3 -m venv venv
-
-# Activate it
-# On Linux/Mac:
-source venv/bin/activate
-
-# On Windows:
-venv\Scripts\activate
+source venv/bin/activate  # Linux/Mac
+# or
+venv\Scripts\activate  # Windows
 ```
 
-**You should see `(venv)` at the start of your command prompt.**
+You should see `(venv)` in your prompt. If not, the activation didn't work.
 
-**Why use a virtual environment?**
-- Prevents conflicts between project dependencies
-- Keeps your global Python clean
-- Easy to reproduce on other machines
-- Easy to delete and start fresh if needed
-
----
-
-### Step 4: Upgrade pip
-
-Always upgrade pip first:
+**Upgrade pip:**
 
 ```bash
 pip install --upgrade pip
@@ -103,700 +52,421 @@ pip install --upgrade pip
 
 ---
 
-## Part 2: Install CrewAI and Python Dependencies
+## Install CrewAI and Dependencies
 
-### Step 1: Install CrewAI
+Create `requirements.txt`:
 
-```bash
-pip install crewai crewai-tools
-```
-
-This installs:
-- `crewai` - The core framework
-- `crewai-tools` - Pre-built tools for agents
-
-**This might take a few minutes...**
-
----
-
-### Step 2: Install Additional Python Libraries
-
-Create a file called `requirements.txt`:
-
-```bash
-# Create requirements file
-cat > requirements.txt << 'EOF'
+```txt
 # Core framework
-crewai==0.41.1
-crewai-tools==0.8.3
+crewai>=0.28.0
+crewai-tools>=0.1.0
 
 # LLM providers
-anthropic==0.34.0
-openai==1.40.0
+langchain-anthropic>=0.1.0
+python-dotenv>=1.0.0
 
-# Image processing
-Pillow==10.4.0
-opencv-python==4.10.0.84
-numpy==1.26.4
-
-# Cryptography
-pycryptodome==3.20.0
-
-# File analysis
-python-magic==0.4.27
-
-# Audio processing (for future use)
-pydub==0.25.1
-
-# Utilities
-requests==2.32.3
-python-dotenv==1.0.1
-
-# CLI improvements
-rich==13.7.1
-click==8.1.7
-EOF
+# Optional: image processing
+Pillow>=10.0.0
 ```
 
-Install all dependencies:
+Install everything:
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
+This takes a few minutes. CrewAI pulls in many dependencies.
 
-### Step 3: Verify Installation
-
-Test that CrewAI is installed correctly:
+**Verify installation:**
 
 ```bash
-python -c "import crewai; print(f'CrewAI version: {crewai.__version__}')"
+python -c "import crewai; print(crewai.__version__)"
 ```
 
-**Expected output:** `CrewAI version: 0.41.1` (or similar)
+Should print version number without errors.
 
 ---
 
-## Part 3: Install System Steganography Tools
+## Install Steganography Tools
 
-These are command-line tools that our agents will use.
+These are system tools, not Python packages.
 
-### Linux (Ubuntu/Debian)
+**Linux (Ubuntu/Debian):**
 
 ```bash
-# Update package list
 sudo apt update
+sudo apt install -y steghide binwalk exiftool foremost hexedit
+```
 
-# Install essential stego tools
-sudo apt install -y \
-    steghide \
-    binwalk \
-    exiftool \
-    foremost \
-    hexedit \
-    xxd \
-    file
+**For zsteg (Ruby-based):**
 
-# Install zsteg (Ruby gem)
+```bash
 sudo apt install -y ruby-full
 sudo gem install zsteg
 ```
 
----
-
-### macOS
+**macOS:**
 
 ```bash
-# Install Homebrew if you don't have it
-# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Install stego tools
-brew install steghide
-brew install binwalk
-brew install exiftool
-brew install foremost
-
-# Install zsteg
+brew install steghide binwalk exiftool foremost
 gem install zsteg
 ```
 
----
+**Windows:**
 
-### Windows
+Use WSL2. Seriously. Native Windows installation for these tools is painful.
 
-**Option 1: Use WSL2 (Recommended)**
 1. Install WSL2: https://learn.microsoft.com/en-us/windows/wsl/install
 2. Follow Linux instructions above
 
-**Option 2: Native Windows**
-- Download tools manually:
-  - Steghide: http://steghide.sourceforge.net/
-  - ExifTool: https://exiftool.org/
-  - Binwalk: https://github.com/ReFirmLabs/binwalk
-
-*Note: WSL2 is much easier for this project!*
-
----
-
-### Verify Tool Installation
-
-Test that tools are accessible:
+**Verify tools work:**
 
 ```bash
-# Test each tool
 steghide --version
 binwalk --help
 exiftool -ver
-foremost -V
 zsteg --version
 ```
 
-**Each should show version information without errors.**
+Each should respond without "command not found" errors.
 
 ---
 
-## Part 4: API Key Configuration
+## Troubleshooting: Steghide Issues (Common)
 
-Our agents need an LLM to "think." We'll use Anthropic Claude (recommended).
+**Problem:** steghide installs but gives linking errors when running.
 
-### Step 1: Get an API Key
+This happened to me on Ubuntu 22.04. steghide has old dependencies.
 
-**Anthropic Claude (Recommended):**
-1. Go to https://console.anthropic.com/
-2. Sign up or log in
-3. Navigate to "API Keys"
-4. Create a new key
-5. Copy it (keep it secret!)
-
-**Pricing:** Claude Sonnet costs ~$3 per million input tokens (very affordable for learning)
-
-**Alternative - OpenAI:**
-1. Go to https://platform.openai.com/
-2. Create API key
-3. Note: GPT-4 is more expensive
-
----
-
-### Step 2: Create .env File
-
-Create a `.env` file in your project root:
+**Fix:**
 
 ```bash
+sudo apt install -y libjpeg62 libmhash2
+```
+
+If that doesn't work, try installing from source or use Docker (covered later).
+
+**Problem:** zsteg not found after `gem install`
+
+Ruby gems install to user directory, may not be in PATH.
+
+**Fix:**
+
+```bash
+# Find where it installed
+gem environment
+
+# Add to PATH (in ~/.bashrc or ~/.zshrc)
+export PATH="$HOME/.local/share/gem/ruby/3.0.0/bin:$PATH"
+
+# Reload shell
+source ~/.bashrc
+```
+
+---
+
+## API Key Configuration
+
+You need an LLM for agents to "think." Anthropic Claude is recommended.
+
+**Get Claude API key:**
+
+1. Go to https://console.anthropic.com/
+2. Sign up (free tier available)
+3. Navigate to API Keys
+4. Create new key
+5. Copy it
+
+**Pricing:** Claude Sonnet costs ~$3 per million input tokens. For learning/testing, you'll spend a few dollars max.
+
+Alternative: OpenAI GPT-4 works too, but costs more.
+
+**Create `.env` file:**
+
+```bash
+# In project root
 cat > .env << 'EOF'
-# Anthropic Claude API Key
-ANTHROPIC_API_KEY=your_key_here
-
-# Alternative: OpenAI
-# OPENAI_API_KEY=your_key_here
-
-# Model selection
+ANTHROPIC_API_KEY=your_actual_key_here
 DEFAULT_MODEL=claude-3-5-sonnet-20241022
-
-# Project settings
-PROJECT_NAME=CTF-Stego-Solver
 VERBOSE=True
 EOF
 ```
 
-**Replace `your_key_here` with your actual API key!**
+Replace `your_actual_key_here` with your real key.
+
+**Secure it:**
+
+```bash
+cat > .gitignore << 'EOF'
+.env
+*.env
+venv/
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+*.log
+*.extracted
+EOF
+```
+
+**Critical:** Never commit `.env` to git. Your API key = your money.
 
 ---
 
-### Step 3: Secure Your .env File
+## Troubleshooting: API Key Issues
 
-**Important:** Never commit API keys to git!
+**Problem:** "Invalid API key" error even though key is correct.
 
+Check for hidden spaces:
 ```bash
-# Create .gitignore
-cat > .gitignore << 'EOF'
-# Environment files
-.env
-*.env
+# Wrong (space after =)
+ANTHROPIC_API_KEY= sk-ant-xxxxx
 
-# Virtual environment
-venv/
-.venv/
+# Right (no space)
+ANTHROPIC_API_KEY=sk-ant-xxxxx
+```
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
+Also verify the key starts with `sk-ant-` for Anthropic.
 
-# IDE
-.vscode/
-.idea/
-*.swp
+**Problem:** python-dotenv not loading `.env`
 
-# Outputs
-*.log
-outputs/
-test_files/
-*.png
-*.jpg
-*.wav
+Make sure `.env` is in the same directory where you run python, or use absolute path:
 
-# OS
-.DS_Store
-Thumbs.db
-EOF
+```python
+from dotenv import load_dotenv
+from pathlib import Path
+
+env_path = Path('.') / '.env'
+load_dotenv(dotenv_path=env_path)
 ```
 
 ---
 
-## Part 5: Create Project Structure
+## Project Structure
 
-Let's create the directory structure for our project:
+Create directories:
 
 ```bash
-# Create directory structure
-mkdir -p src/{agents,tools,tasks,crew,utils}
-mkdir -p tests/sample_challenges
-mkdir -p outputs
-mkdir -p docs/notes
+mkdir -p src/{agents,tools,tasks,utils}
+mkdir -p tests examples outputs
 
-# Create __init__.py files for Python packages
 touch src/__init__.py
 touch src/agents/__init__.py
 touch src/tools/__init__.py
 touch src/tasks/__init__.py
-touch src/crew/__init__.py
 touch src/utils/__init__.py
 ```
 
-**Your structure should now look like:**
+Final structure:
 
 ```
 ctf-stego-solver/
-├── venv/                    # Virtual environment
+├── venv/
 ├── src/
-│   ├── __init__.py
-│   ├── agents/             # Agent definitions
-│   │   └── __init__.py
-│   ├── tools/              # Custom tools
-│   │   └── __init__.py
-│   ├── tasks/              # Task definitions
-│   │   └── __init__.py
-│   ├── crew/               # Crew configuration
-│   │   └── __init__.py
-│   └── utils/              # Helper functions
-│       └── __init__.py
+│   ├── agents/
+│   ├── tools/
+│   ├── tasks/
+│   └── utils/
 ├── tests/
-│   └── sample_challenges/  # Test CTF files
-├── outputs/                # Generated reports
-├── docs/
-│   └── notes/              # Your learning notes
-├── .env                    # API keys (secret!)
-├── .gitignore              # Git ignore rules
-└── requirements.txt        # Python dependencies
+├── examples/
+├── outputs/
+├── .env
+├── .gitignore
+└── requirements.txt
 ```
 
 ---
 
-## Part 6: Verify Everything Works
+## Verify Everything Works
 
-Let's create a simple test script to verify your setup:
+Create `test_setup.py`:
 
-```bash
-cat > test_setup.py << 'EOF'
+```python
 #!/usr/bin/env python3
-"""
-Setup verification script.
-Tests that all dependencies and tools are properly installed.
-"""
-
 import sys
 import subprocess
 from pathlib import Path
 
-def test_python_version():
-    """Check Python version."""
-    version = sys.version_info
-    if version.major >= 3 and version.minor >= 10:
-        print("✅ Python version:", f"{version.major}.{version.minor}.{version.micro}")
-        return True
-    else:
-        print("❌ Python 3.10+ required")
-        return False
-
-def test_import(module_name):
-    """Test if a Python module can be imported."""
+def check_tool(name):
     try:
-        __import__(module_name)
-        print(f"✅ {module_name} imported successfully")
+        subprocess.run([name, '--version'], capture_output=True, timeout=5)
+        print(f"✓ {name}")
         return True
-    except ImportError:
-        print(f"❌ {module_name} not found")
-        return False
-
-def test_system_tool(tool_name):
-    """Test if a system tool is available."""
-    try:
-        result = subprocess.run(
-            [tool_name, '--version'],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        if result.returncode == 0:
-            print(f"✅ {tool_name} is available")
-            return True
-        else:
-            print(f"⚠️  {tool_name} found but returned error")
-            return False
     except FileNotFoundError:
-        print(f"❌ {tool_name} not found")
-        return False
-    except subprocess.TimeoutExpired:
-        print(f"⚠️  {tool_name} timeout")
-        return False
-    except Exception as e:
-        print(f"❌ {tool_name} error: {e}")
-        return False
-
-def test_env_file():
-    """Check if .env file exists."""
-    if Path('.env').exists():
-        print("✅ .env file found")
-        return True
-    else:
-        print("❌ .env file not found")
+        print(f"✗ {name} not found")
         return False
 
 def main():
-    """Run all tests."""
-    print("🧪 Testing CTF Stego Solver Setup\n")
-    print("=" * 50)
+    print("Checking setup...\n")
 
     results = []
 
-    # Test Python
-    print("\n📦 Python Environment:")
-    results.append(test_python_version())
+    # Python packages
+    print("Python packages:")
+    for pkg in ['crewai', 'anthropic', 'dotenv']:
+        try:
+            __import__(pkg)
+            print(f"✓ {pkg}")
+            results.append(True)
+        except ImportError:
+            print(f"✗ {pkg}")
+            results.append(False)
 
-    # Test Python packages
-    print("\n📚 Python Packages:")
-    packages = ['crewai', 'anthropic', 'PIL', 'numpy', 'dotenv']
-    for package in packages:
-        results.append(test_import(package))
+    # System tools
+    print("\nSystem tools:")
+    for tool in ['steghide', 'binwalk', 'exiftool']:
+        results.append(check_tool(tool))
 
-    # Test system tools
-    print("\n🔧 System Tools:")
-    tools = ['steghide', 'binwalk', 'exiftool']
-    for tool in tools:
-        results.append(test_system_tool(tool))
+    # Config
+    print("\nConfiguration:")
+    if Path('.env').exists():
+        print("✓ .env file")
+        results.append(True)
+    else:
+        print("✗ .env file missing")
+        results.append(False)
 
-    # Test config
-    print("\n⚙️  Configuration:")
-    results.append(test_env_file())
+    print(f"\n{sum(results)}/{len(results)} checks passed")
 
-    # Summary
-    print("\n" + "=" * 50)
-    passed = sum(results)
-    total = len(results)
-
-    if passed == total:
-        print(f"✅ All tests passed! ({passed}/{total})")
-        print("\n🎉 You're ready to start building!")
+    if all(results):
+        print("Ready to proceed!")
         return 0
     else:
-        print(f"⚠️  Some tests failed ({passed}/{total} passed)")
-        print("\n📝 Please fix the issues above and try again.")
+        print("Fix issues above before continuing")
         return 1
 
 if __name__ == '__main__':
     sys.exit(main())
-EOF
-
-# Make it executable
-chmod +x test_setup.py
 ```
 
----
-
-### Run the Test
+Run it:
 
 ```bash
+chmod +x test_setup.py
 python test_setup.py
 ```
 
-**Expected output:**
-
-```
-🧪 Testing CTF Stego Solver Setup
-
-==================================================
-
-📦 Python Environment:
-✅ Python version: 3.10.12
-
-📚 Python Packages:
-✅ crewai imported successfully
-✅ anthropic imported successfully
-✅ PIL imported successfully
-✅ numpy imported successfully
-✅ dotenv imported successfully
-
-🔧 System Tools:
-✅ steghide is available
-✅ binwalk is available
-✅ exiftool is available
-
-⚙️  Configuration:
-✅ .env file found
-
-==================================================
-✅ All tests passed! (10/10)
-
-🎉 You're ready to start building!
-```
-
-**If you see all ✅ checkmarks, you're ready to proceed!**
+Should see all checkmarks.
 
 ---
 
-## Part 7: Create a Simple Test
+## Test LLM Connection
 
-Let's verify that CrewAI can actually connect to the LLM:
+Create `test_llm.py`:
 
-```bash
-cat > test_llm.py << 'EOF'
+```python
 #!/usr/bin/env python3
-"""
-Test LLM connection.
-Verifies that the API key works and we can communicate with Claude.
-"""
-
 import os
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 
-# Load environment variables
 load_dotenv()
 
-def test_claude_connection():
-    """Test connection to Claude API."""
+api_key = os.getenv('ANTHROPIC_API_KEY')
 
-    # Get API key
-    api_key = os.getenv('ANTHROPIC_API_KEY')
+if not api_key or api_key == 'your_actual_key_here':
+    print("Set your API key in .env first")
+    exit(1)
 
-    if not api_key:
-        print("❌ ANTHROPIC_API_KEY not found in .env file")
-        return False
+try:
+    llm = ChatAnthropic(
+        model="claude-3-5-sonnet-20241022",
+        anthropic_api_key=api_key
+    )
 
-    if api_key == 'your_key_here':
-        print("❌ Please replace 'your_key_here' with your actual API key in .env")
-        return False
+    response = llm.invoke("Say 'Hello' and nothing else.")
+    print(f"Response: {response.content}")
+    print("\nLLM connection works!")
 
-    print("🧪 Testing connection to Claude...\n")
+except Exception as e:
+    print(f"Error: {e}")
+    exit(1)
+```
 
-    try:
-        # Initialize Claude
-        llm = ChatAnthropic(
-            model="claude-3-5-sonnet-20241022",
-            anthropic_api_key=api_key,
-            temperature=0
-        )
+Run it:
 
-        # Send test message
-        response = llm.invoke("Say 'Hello! I'm ready to help with CTF challenges!' and nothing else.")
-
-        print("✅ Connection successful!")
-        print(f"\n📝 Response from Claude:\n{response.content}\n")
-
-        return True
-
-    except Exception as e:
-        print(f"❌ Connection failed: {e}")
-        return False
-
-if __name__ == '__main__':
-    success = test_claude_connection()
-
-    if success:
-        print("🎉 LLM connection verified! You're all set!")
-        exit(0)
-    else:
-        print("\n📝 Please check your API key and try again.")
-        exit(1)
-EOF
-
+```bash
 chmod +x test_llm.py
-```
-
-Run the LLM test:
-
-```bash
 python test_llm.py
 ```
 
-**Expected output:**
+Should get response from Claude.
 
+---
+
+## Common Setup Mistakes
+
+**Mistake 1: Not activating virtual environment**
+
+Symptom: `crewai` works in one terminal, not another.
+
+Cause: Forgot to run `source venv/bin/activate`.
+
+Always activate before working. I add this to my shell prompt to remind me.
+
+**Mistake 2: Running Python 3.9 or older**
+
+Symptom: Import errors with typing or other weird errors.
+
+Cause: CrewAI needs 3.10+.
+
+Check: `python --version` inside activated venv should show 3.10+.
+
+**Mistake 3: Installing tools globally instead of in venv**
+
+Symptom: Works on your machine, breaks when someone else tries it.
+
+Cause: Installed crewai with `sudo pip install` (don't do this).
+
+Always use venv, never sudo pip for project dependencies.
+
+**Mistake 4: API key in code**
+
+Don't do this:
+```python
+llm = ChatAnthropic(api_key="sk-ant-hardcoded-key")  # WRONG
 ```
-🧪 Testing connection to Claude...
 
-✅ Connection successful!
-
-📝 Response from Claude:
-Hello! I'm ready to help with CTF challenges!
-
-🎉 LLM connection verified! You're all set!
+Do this:
+```python
+api_key = os.getenv('ANTHROPIC_API_KEY')  # RIGHT
+llm = ChatAnthropic(api_key=api_key)
 ```
 
 ---
 
-## Part 8: Optional - Create Development Helpers
+## Quick Reference
 
-### Helper Script: Activate Environment
-
+**Activate venv:**
 ```bash
-cat > activate.sh << 'EOF'
-#!/bin/bash
-# Quick activation script
 source venv/bin/activate
-echo "✅ Virtual environment activated"
-echo "📁 Project: $(pwd)"
-echo "🐍 Python: $(python --version)"
-EOF
-
-chmod +x activate.sh
 ```
 
-Usage: `source activate.sh`
-
----
-
-### Helper Script: Run Tests
-
-```bash
-cat > run_tests.sh << 'EOF'
-#!/bin/bash
-# Run all verification tests
-set -e
-
-echo "🧪 Running setup verification..."
-python test_setup.py
-
-echo ""
-echo "🧪 Testing LLM connection..."
-python test_llm.py
-
-echo ""
-echo "✅ All tests passed!"
-EOF
-
-chmod +x run_tests.sh
-```
-
----
-
-## 🎓 Summary: What You've Accomplished
-
-Congratulations! Your development environment is now fully configured:
-
-✅ **Python Environment**
-- Virtual environment created and activated
-- All Python dependencies installed
-- CrewAI framework ready to use
-
-✅ **System Tools**
-- Steganography tools installed
-- Command-line utilities available
-- Tools verified and working
-
-✅ **Configuration**
-- API key configured
-- Environment variables set
-- Security measures in place (.gitignore)
-
-✅ **Project Structure**
-- Clean directory organization
-- Python packages initialized
-- Ready for development
-
-✅ **Verification**
-- All dependencies tested
-- LLM connection confirmed
-- Ready to build!
-
----
-
-## 🚀 What's Next?
-
-Now that your environment is set up, you're ready to **build your first agent!**
-
-**Next lesson:** [Lesson 3: Your First CrewAI Agent (Hello World)](./LESSON_03.md)
-
-In the next lesson, we'll:
-1. Create a simple agent from scratch
-2. Give it a basic tool to use
-3. Run your first agent task
-4. Understand how it all works
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Issue: `pip install crewai` fails**
-- Solution: Upgrade pip: `pip install --upgrade pip`
-- Try: `pip install crewai --no-cache-dir`
-
-**Issue: `steghide: command not found`**
-- Solution: Reinstall: `sudo apt install steghide`
-- Check PATH: `which steghide`
-
-**Issue: API key not working**
-- Verify key is correct in `.env`
-- Check you're using the right variable name: `ANTHROPIC_API_KEY`
-- Ensure no extra spaces: `ANTHROPIC_API_KEY=sk-ant-...` (no spaces around =)
-
-**Issue: Import errors**
-- Verify venv is activated: `which python` should show path with `venv`
-- Reinstall in venv: `pip install -r requirements.txt`
-
-**Issue: Python version too old**
-- Install Python 3.10+
-- Create venv with: `python3.10 -m venv venv`
-
----
-
-## 📝 Quick Reference
-
-### Activate Virtual Environment
-```bash
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
-
-### Install Dependencies
+**Install dependencies:**
 ```bash
 pip install -r requirements.txt
 ```
 
-### Verify Setup
+**Verify setup:**
 ```bash
 python test_setup.py
 python test_llm.py
 ```
 
-### Deactivate Virtual Environment
+**Deactivate:**
 ```bash
 deactivate
 ```
 
 ---
 
-**🎉 Great job completing Lesson 2!**
+## Next Steps
 
-Your environment is now ready. Take a break, then dive into Lesson 3 where we'll write actual agent code!
+Setup complete. Now the fun part - writing actual agent code.
+
+[Continue to Lesson 3: Your First Agent →](./LESSON_03.md)
 
 ---
 
-*Questions? Review the [GLOSSARY](../GLOSSARY.md) or ask your mentor!*
-
-*Previous: [Lesson 1 - Understanding Multi-Agent Systems](./LESSON_01.md)*
-*Next: [Lesson 3 - Your First Agent](./LESSON_03.md)*
+*Note: If you hit issues not covered here, check tool versions. steghide in particular has compatibility issues on newer systems. Docker setup in Lesson 8 addresses this.*
